@@ -4,6 +4,18 @@
 
 Repository baseline and layered Node.js architecture are scaffolded.
 
+## Phase 1.2 status
+
+Data model and SQL migrations are added for:
+- tenants
+- users
+- widgets
+- widget_fields
+- submissions
+- submission_events
+- idempotency_keys
+- schema_migrations (migration tracking)
+
 ## Stack
 
 - Node.js (CommonJS)
@@ -31,6 +43,13 @@ src/
 ```bash
 npm install
 npm run dev
+```
+
+## Database migration
+
+```bash
+docker compose up -d postgres
+npm run migrate
 ```
 
 Health endpoint:

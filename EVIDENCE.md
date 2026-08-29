@@ -22,3 +22,8 @@
   - Owner dashboard analytics endpoints
 - Response format and status-code matrix documented.
 - Explicit non-goal documented.
+
+## Phase 1.4
+
+- One-page design section committed in `README.md` under:
+  - `Phase 1.4 Gate output - One-page design`

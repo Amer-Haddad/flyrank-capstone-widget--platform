@@ -21,3 +21,8 @@
 - Defined success/error response shape contract.
 - Added status-code matrix for expected API behavior.
 - Added explicit non-goal statement for scope control.
+
+## 2026-08-29 - Phase 1.4 gate output
+
+- Added a one-page design section directly in `README.md`.
+- Included problem, architecture, data model, API surface, resilience decisions, response contract, and non-goal.

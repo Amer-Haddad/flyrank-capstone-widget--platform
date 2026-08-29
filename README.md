@@ -61,3 +61,50 @@ GET /api/health
 ## Design and API contract
 
 Phase 1 design, API contracts, response format, status-code matrix, and explicit non-goal are documented in [DESIGN.md](C:/Users/USER/Desktop/flyrank-capstone-widget--platform/DESIGN.md).
+
+## Phase 1.4 Gate output - One-page design
+
+### Problem
+Widget owners need a secure, tenant-isolated backend to embed widgets on any website and collect leads from untrusted public traffic.
+
+### Core architecture
+- Layered backend: middleware -> controllers -> services -> repositories -> PostgreSQL.
+- Three request paths:
+  - Owner path (authenticated widget management + dashboard)
+  - Public delivery path (widget script + widget config)
+  - Public ingestion path (cross-origin submissions)
+
+### Data model
+- `tenants`, `users`, `widgets`, `widget_fields`, `submissions`, `submission_events`, `idempotency_keys`.
+- Every tenant-owned table includes `tenant_id` for strict isolation.
+- Tenant and analytics indexes are included in [schema.sql](C:/Users/USER/Desktop/flyrank-capstone-widget--platform/src/database/schema.sql).
+
+### API surface (contract)
+- Owner-authenticated:
+  - `POST /api/widgets`
+  - `GET /api/widgets`
+  - `GET /api/widgets/:id`
+  - `PATCH /api/widgets/:id`
+  - `DELETE /api/widgets/:id`
+  - `GET /api/dashboard/*`
+- Public:
+  - `GET /widget.js?id=<widgetId>&v=<bundleVersion>`
+  - `GET /api/public/widgets/:id/config`
+  - `OPTIONS /api/public/submissions`
+  - `POST /api/public/submissions`
+
+### Security and resilience decisions
+- CORS + preflight handling for public submissions.
+- Boundary validation before business logic.
+- Rate limiting and spam control before persistence.
+- Geo enrichment with fallback chain.
+- Side effects are non-blocking (submission success does not depend on email/webhook success).
+
+### Response contract
+- Success:
+  - `{ "success": true, "data": ... }`
+- Error:
+  - `{ "success": false, "error": { "code": "...", "message": "...", "details": [] } }`
+
+### Explicit non-goal
+No advanced no-code visual builder (drag-and-drop editor, theme marketplace, campaign automation) in this capstone scope.

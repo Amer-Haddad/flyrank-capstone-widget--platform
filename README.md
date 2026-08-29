@@ -57,3 +57,7 @@ Health endpoint:
 ```bash
 GET /api/health
 ```
+
+## Design and API contract
+
+Phase 1 design, API contracts, response format, status-code matrix, and explicit non-goal are documented in [DESIGN.md](C:/Users/USER/Desktop/flyrank-capstone-widget--platform/DESIGN.md).

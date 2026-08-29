@@ -12,3 +12,13 @@
 - `npm test` output:
   - `pass 0`
   - `fail 0`
+
+## Phase 1.3
+
+- API contract documented in `DESIGN.md`:
+  - Owner-authenticated widget management endpoints
+  - Public widget delivery endpoints
+  - Public submission ingestion endpoints (+ preflight)
+  - Owner dashboard analytics endpoints
+- Response format and status-code matrix documented.
+- Explicit non-goal documented.

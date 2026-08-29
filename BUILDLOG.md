@@ -14,3 +14,10 @@
 - Added `src/database/pool.js` to centralize database connection.
 - Updated `npm run migrate` to run `node src/database/apply-schema.js`.
 - Verified `npm run migrate` prints `Database schema applied successfully.`
+
+## 2026-08-29 - Phase 1.3 API contract definition
+
+- Expanded `DESIGN.md` with all 4 request paths and endpoint contracts.
+- Defined success/error response shape contract.
+- Added status-code matrix for expected API behavior.
+- Added explicit non-goal statement for scope control.

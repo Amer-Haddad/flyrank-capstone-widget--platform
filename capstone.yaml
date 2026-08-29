@@ -1,0 +1,8 @@
+run: npm run dev
+seed: "TBD in Phase 1.2"
+test: npm test
+base_url: http://localhost:3000
+endpoints:
+  - method: GET
+    path: /api/health
+    description: Service health baseline endpoint

@@ -37,6 +37,16 @@
 - `POST /api/public/submissions` rejects spam honeypot fields before persistence.
 - `POST /api/public/submissions` rate-limits repeated requests with `429 Too Many Requests`.
 
+## Phase 2.2 - Abuse protection proof
+
+### Abuse protection behavior
+
+- Per-IP rate limiting is enforced before persistence using `express-rate-limit`.
+- Per-widget rate limiting is enforced using `clientIP + widgetId` as the key.
+- Hidden-field honeypots (`website`, `company`) are blocked as spam indicators.
+- Rate-limited responses return API-standard JSON errors with `code: "RATE_LIMITED"`.
+- Spam submissions fail with `400 VALIDATION_ERROR` and never reach the persistence layer.
+
 ### Validation command
 
 ```bash
@@ -47,13 +57,13 @@ node --test test/public-submissions.test.js
 ### Proof output
 
 ```text
-POST /api/public/submissions 201 18.757 ms - 347
+POST /api/public/submissions 201 17.576 ms - 347
 ✔ POST /api/public/submissions creates a submission for valid payloads
-POST /api/public/submissions 400 1.962 ms - 195
+POST /api/public/submissions 400 2.454 ms - 195
 ✔ POST /api/public/submissions rejects invalid payloads with 400
-POST /api/public/submissions 400 1.405 ms - 214
+POST /api/public/submissions 400 1.390 ms - 214
 ✔ POST /api/public/submissions blocks spam honeypots
-POST /api/public/submissions 429 0.372 ms - 115
+POST /api/public/submissions 429 0.483 ms - 115
 ✔ POST /api/public/submissions rate-limits repeated requests
 ℹ tests 4
 ℹ pass 4
@@ -67,4 +77,4 @@ POST /api/public/submissions 429 0.372 ms - 115
 - Submission service checks in [src/services/public-submissions.service.js](C:/Users/USER/Desktop/flyrank-capstone-widget--platform/src/services/public-submissions.service.js)
 - Regression tests in [test/public-submissions.test.js](C:/Users/USER/Desktop/flyrank-capstone-widget--platform/test/public-submissions.test.js)
 
-This confirms the Phase 2.1 gate is satisfied for cross-origin public submission ingestion under valid, invalid, spam, and rate-limited conditions.
+This confirms the Phase 2.2 abuse protection gate is satisfied for public submissions under valid, invalid, spam, and burst-traffic conditions.

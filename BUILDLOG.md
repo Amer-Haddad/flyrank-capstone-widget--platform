@@ -37,6 +37,15 @@
 - Verified the route rejects spam honeypot values before persistence.
 - Verified repeated requests from the same client are throttled with `429 Too Many Requests`.
 
+## 2026-09-03 - Phase 2.2 abuse protection
+
+- Added a dedicated public submission IP limiter with a 60s window and max 20 attempts.
+- Added a widget-scoped limiter keyed by `clientIP + widgetId` with a 60s window and max 10 attempts.
+- Added honeypot detection for hidden fields such as `website` and `company` to block obvious spam submissions.
+- Kept validation and rate limiting in the request path before DB persistence.
+- Confirmed blocked requests return consistent `429 RATE_LIMITED` JSON payloads.
+- Confirmed honeypot triggers return `400 VALIDATION_ERROR` before the submission reaches persistence.
+
 ### Validation command
 
 ```bash
@@ -47,14 +56,15 @@ node --test test/public-submissions.test.js
 ### Runtime evidence captured
 
 ```text
-POST /api/public/submissions 201 18.757 ms - 347
+POST /api/public/submissions 201 17.576 ms - 347
 ✔ POST /api/public/submissions creates a submission for valid payloads
-POST /api/public/submissions 400 1.962 ms - 195
+POST /api/public/submissions 400 2.454 ms - 195
 ✔ POST /api/public/submissions rejects invalid payloads with 400
-POST /api/public/submissions 400 1.405 ms - 214
+POST /api/public/submissions 400 1.390 ms - 214
 ✔ POST /api/public/submissions blocks spam honeypots
-POST /api/public/submissions 429 0.372 ms - 115
+POST /api/public/submissions 429 0.483 ms - 115
 ✔ POST /api/public/submissions rate-limits repeated requests
+ℹ tests 4
 ℹ pass 4
 ℹ fail 0
 ```

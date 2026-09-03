@@ -56,6 +56,17 @@
 - If both providers fail, the request still succeeds and the row is saved without geo metadata.
 - Provider failure simulation is configurable via `GEO_ENRICHMENT_FAILURE_MODE`.
 
+## Phase 2.4 - Safe email side effect proof
+
+### Side-effect behavior
+
+- A successful submission triggers an async email notification job after the row is stored.
+- The client receives a successful `201 Created` response without waiting for the email task to finish.
+- The email task retries up to 3 times.
+- If all attempts fail, a row is saved in `submission_events` with `event_type = 'email_notification'` and `event_status = 'failed'`.
+- The original submission remains valid even when email delivery fails.
+- The configured Gmail sender and test recipient are stored only in `.env`.
+
 ### Validation command
 
 ```bash
@@ -66,18 +77,21 @@ node --test test/public-submissions.test.js
 ### Proof output
 
 ```text
-POST /api/public/submissions 201 2525.782 ms - 347
+POST /api/public/submissions 201 2425.056 ms - 347
 ✔ POST /api/public/submissions creates a submission for valid payloads
-POST /api/public/submissions 400 3.344 ms - 195
+POST /api/public/submissions 400 3.537 ms - 195
 ✔ POST /api/public/submissions rejects invalid payloads with 400
-POST /api/public/submissions 400 1.405 ms - 214
+POST /api/public/submissions 400 1.872 ms - 214
 ✔ POST /api/public/submissions blocks spam honeypots
-POST /api/public/submissions 429 0.523 ms - 115
+POST /api/public/submissions 429 0.386 ms - 115
 ✔ POST /api/public/submissions rate-limits repeated requests
 ✔ resolveGeoForIp falls back to the secondary provider when primary fails
 ✔ resolveGeoForIp returns null when both providers fail
-ℹ tests 6
-ℹ pass 6
+POST /api/public/submissions 201 0.805 ms - 357
+[email] failed after 3 attempts for submission 44444444-4444-4444-8444-444444444444: simulated email outage
+✔ POST /api/public/submissions does not fail when async email side effect fails
+ℹ tests 7
+ℹ pass 7
 ℹ fail 0
 ```
 
@@ -87,7 +101,8 @@ POST /api/public/submissions 429 0.523 ms - 115
 - Validator rules in [src/validators/public-submissions.validator.js](C:/Users/USER/Desktop/flyrank-capstone-widget--platform/src/validators/public-submissions.validator.js)
 - Submission service checks in [src/services/public-submissions.service.js](C:/Users/USER/Desktop/flyrank-capstone-widget--platform/src/services/public-submissions.service.js)
 - Geo enrichment service in [src/services/geo-enrichment.service.js](C:/Users/USER/Desktop/flyrank-capstone-widget--platform/src/services/geo-enrichment.service.js)
+- Email side-effect job in [src/services/submission-side-effects.service.js](C:/Users/USER/Desktop/flyrank-capstone-widget--platform/src/services/submission-side-effects.service.js)
 - Database persistence hook in [src/repositories/public-submissions.repository.js](C:/Users/USER/Desktop/flyrank-capstone-widget--platform/src/repositories/public-submissions.repository.js)
 - Regression tests in [test/public-submissions.test.js](C:/Users/USER/Desktop/flyrank-capstone-widget--platform/test/public-submissions.test.js)
 
-This confirms the Phase 2.2 and 2.3 gates are satisfied for abuse protection and the geo fallback chain under valid, invalid, spam, rate-limited, and provider-failure conditions.
+This confirms the Phase 2.2, 2.3, and 2.4 gates are satisfied for abuse protection, geolocation fallback, and non-blocking side effects under valid, invalid, spam, rate-limited, provider-failure, and async email-failure conditions.

@@ -25,7 +25,29 @@ async function insertSubmission({ widgetId, tenantId, payload, ip, userAgent, ge
   return result.rows[0];
 }
 
+async function insertSubmissionEvent({ submissionId, tenantId, eventType, eventStatus, attemptCount, errorMessage, metadata }) {
+  const query = `
+    INSERT INTO submission_events (submission_id, tenant_id, event_type, event_status, attempt_count, error_message, metadata)
+    VALUES ($1, $2, $3, $4, $5, $6, $7::jsonb)
+    RETURNING id, submission_id, tenant_id, event_type, event_status, attempt_count, created_at;
+  `;
+
+  const values = [
+    submissionId,
+    tenantId,
+    eventType,
+    eventStatus,
+    attemptCount,
+    errorMessage || null,
+    JSON.stringify(metadata || {}),
+  ];
+
+  const result = await pool.query(query, values);
+  return result.rows[0];
+}
+
 module.exports = {
   findWidgetById,
   insertSubmission,
+  insertSubmissionEvent,
 };

@@ -55,6 +55,16 @@
 - Added `GEO_ENRICHMENT_FAILURE_MODE` support for deterministic testing and evidence capture.
 - Wired the enrichment result into the submissions insert path so `submissions.geo` stores normalized location data when available.
 
+## 2026-09-03 - Phase 2.4 safe side effects and email notification
+
+- Added a non-blocking async email side effect using `src/services/submission-side-effects.service.js`.
+- The email job is kicked off immediately after a successful submission insert, but it does not block the client response.
+- The side effect includes retry logic (3 attempts) and writes a failure record to `submission_events` when the email delivery fails.
+- Added the configured testing recipient and Gmail sender values to `.env` only.
+- Kept the email workflow safe: delivery problems are logged and recorded, but the original submission still returns a successful `201` response.
+
+![alt text](<Screenshot 2026-09-03 184530.png>)
+
 ### Validation command
 
 ```bash
@@ -65,17 +75,20 @@ node --test test/public-submissions.test.js
 ### Runtime evidence captured
 
 ```text
-POST /api/public/submissions 201 2525.782 ms - 347
+POST /api/public/submissions 201 2425.056 ms - 347
 ✔ POST /api/public/submissions creates a submission for valid payloads
-POST /api/public/submissions 400 3.344 ms - 195
+POST /api/public/submissions 400 3.537 ms - 195
 ✔ POST /api/public/submissions rejects invalid payloads with 400
-POST /api/public/submissions 400 1.405 ms - 214
+POST /api/public/submissions 400 1.872 ms - 214
 ✔ POST /api/public/submissions blocks spam honeypots
-POST /api/public/submissions 429 0.523 ms - 115
+POST /api/public/submissions 429 0.386 ms - 115
 ✔ POST /api/public/submissions rate-limits repeated requests
 ✔ resolveGeoForIp falls back to the secondary provider when primary fails
 ✔ resolveGeoForIp returns null when both providers fail
-ℹ tests 6
-ℹ pass 6
+POST /api/public/submissions 201 0.805 ms - 357
+[email] failed after 3 attempts for submission 44444444-4444-4444-8444-444444444444: simulated email outage
+✔ POST /api/public/submissions does not fail when async email side effect fails
+ℹ tests 7
+ℹ pass 7
 ℹ fail 0
 ```

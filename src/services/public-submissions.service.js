@@ -1,5 +1,6 @@
 const submissionsRepository = require("../repositories/public-submissions.repository");
 const { resolveGeoForIp } = require("./geo-enrichment.service");
+const { enqueueSubmissionSideEffects } = require("./submission-side-effects.service");
 const { HttpError } = require("../utils/http-error");
 
 function getRequestIp(req) {
@@ -41,6 +42,15 @@ async function createSubmission({ widgetId, payload, req }) {
     ip: ipAddress,
     userAgent: req.headers["user-agent"] || null,
     geo,
+  });
+
+  enqueueSubmissionSideEffects({
+    submissionId: submission.id,
+    widgetId: submission.widget_id,
+    tenantId: submission.tenant_id,
+    payload,
+    ip: ipAddress,
+    userAgent: req.headers["user-agent"] || null,
   });
 
   return submission;

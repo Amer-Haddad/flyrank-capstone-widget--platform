@@ -9,6 +9,7 @@ const submissionsRepository = require("../src/repositories/public-submissions.re
 
 const originalFindWidgetById = submissionsRepository.findWidgetById;
 const originalInsertSubmission = submissionsRepository.insertSubmission;
+const originalInsertSubmissionEvent = submissionsRepository.insertSubmissionEvent;
 
 function buildServer() {
   return new Promise((resolve) => {
@@ -214,7 +215,61 @@ test("resolveGeoForIp returns null when both providers fail", async () => {
   }
 });
 
+test("POST /api/public/submissions does not fail when async email side effect fails", async () => {
+  submissionsRepository.findWidgetById = async () => ({
+    id: "11111111-1111-4111-8111-111111111111",
+    tenant_id: "22222222-2222-4222-8222-222222222222",
+    is_active: true,
+  });
+  submissionsRepository.insertSubmission = async ({ widgetId, tenantId, payload, ip, userAgent, geo }) => ({
+    id: "44444444-4444-4444-8444-444444444444",
+    widget_id: widgetId,
+    tenant_id: tenantId,
+    payload,
+    ip,
+    user_agent: userAgent,
+    geo,
+    status: "received",
+    created_at: new Date().toISOString(),
+  });
+
+  let eventInserted = false;
+  submissionsRepository.insertSubmissionEvent = async () => {
+    eventInserted = true;
+    return { id: "55555555-5555-4555-8555-555555555555" };
+  };
+
+  const originalFetch = global.fetch;
+  global.fetch = async () => {
+    throw new Error("simulated email outage");
+  };
+
+  const { server, port } = await buildServer();
+
+  try {
+    const response = await originalFetch(`http://127.0.0.1:${port}/api/public/submissions`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Forwarded-For": `198.51.100.${Math.floor(Math.random() * 255)}`,
+      },
+      body: JSON.stringify({
+        widgetId: "11111111-1111-4111-8111-111111111111",
+        payload: { name: "Jamie Doe", email: "jamie@example.com" },
+      }),
+    });
+
+    await new Promise((resolve) => setTimeout(resolve, 60));
+    assert.equal(response.status, 201);
+    assert.equal(eventInserted, true);
+  } finally {
+    global.fetch = originalFetch;
+    server.close();
+  }
+});
+
 test.after(() => {
   submissionsRepository.findWidgetById = originalFindWidgetById;
   submissionsRepository.insertSubmission = originalInsertSubmission;
+  submissionsRepository.insertSubmissionEvent = originalInsertSubmissionEvent;
 });

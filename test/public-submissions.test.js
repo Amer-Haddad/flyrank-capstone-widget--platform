@@ -4,6 +4,7 @@ const assert = require("node:assert/strict");
 process.env.DATABASE_URL = process.env.DATABASE_URL || "postgresql://postgres:postgres@localhost:5432/flyrank_test";
 
 const app = require("../src/app");
+const geoEnrichmentService = require("../src/services/geo-enrichment.service");
 const submissionsRepository = require("../src/repositories/public-submissions.repository");
 
 const originalFindWidgetById = submissionsRepository.findWidgetById;
@@ -158,6 +159,58 @@ test("POST /api/public/submissions rate-limits repeated requests", async () => {
     assert.ok(responses.some((response) => response.status === 429));
   } finally {
     server.close();
+  }
+});
+
+test("resolveGeoForIp falls back to the secondary provider when primary fails", async () => {
+  const originalFetch = global.fetch;
+  const calls = [];
+
+  global.fetch = async (url) => {
+    calls.push(String(url));
+
+    if (url.includes("ip-api.com")) {
+      return {
+        ok: false,
+        status: 500,
+      };
+    }
+
+    return {
+      ok: true,
+      status: 200,
+      json: async () => ({
+        city: "Seattle",
+        region: "Washington",
+        country_name: "United States",
+        latitude: 47.6062,
+        longitude: -122.3321,
+      }),
+    };
+  };
+
+  try {
+    const geo = await geoEnrichmentService.resolveGeoForIp("8.8.8.8");
+    assert.equal(geo && geo.source, "secondary");
+    assert.equal(geo && geo.city, "Seattle");
+    assert.equal(calls.length, 2);
+  } finally {
+    global.fetch = originalFetch;
+  }
+});
+
+test("resolveGeoForIp returns null when both providers fail", async () => {
+  const originalFetch = global.fetch;
+  global.fetch = async () => ({
+    ok: false,
+    status: 500,
+  });
+
+  try {
+    const geo = await geoEnrichmentService.resolveGeoForIp("8.8.8.8");
+    assert.equal(geo, null);
+  } finally {
+    global.fetch = originalFetch;
   }
 });
 

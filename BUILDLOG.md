@@ -46,6 +46,15 @@
 - Confirmed blocked requests return consistent `429 RATE_LIMITED` JSON payloads.
 - Confirmed honeypot triggers return `400 VALIDATION_ERROR` before the submission reaches persistence.
 
+## 2026-09-03 - Phase 2.3 enrichment fallback chain
+
+- Added `src/services/geo-enrichment.service.js` with a provider A/B fallback chain.
+- Provider A: `ip-api.com` is attempted first.
+- Provider B: `ipapi.co` is attempted only if provider A fails.
+- If both providers fail, submission creation still proceeds without geo data and does not fail the HTTP request.
+- Added `GEO_ENRICHMENT_FAILURE_MODE` support for deterministic testing and evidence capture.
+- Wired the enrichment result into the submissions insert path so `submissions.geo` stores normalized location data when available.
+
 ### Validation command
 
 ```bash
@@ -56,15 +65,17 @@ node --test test/public-submissions.test.js
 ### Runtime evidence captured
 
 ```text
-POST /api/public/submissions 201 17.576 ms - 347
+POST /api/public/submissions 201 2525.782 ms - 347
 ✔ POST /api/public/submissions creates a submission for valid payloads
-POST /api/public/submissions 400 2.454 ms - 195
+POST /api/public/submissions 400 3.344 ms - 195
 ✔ POST /api/public/submissions rejects invalid payloads with 400
-POST /api/public/submissions 400 1.390 ms - 214
+POST /api/public/submissions 400 1.405 ms - 214
 ✔ POST /api/public/submissions blocks spam honeypots
-POST /api/public/submissions 429 0.483 ms - 115
+POST /api/public/submissions 429 0.523 ms - 115
 ✔ POST /api/public/submissions rate-limits repeated requests
-ℹ tests 4
-ℹ pass 4
+✔ resolveGeoForIp falls back to the secondary provider when primary fails
+✔ resolveGeoForIp returns null when both providers fail
+ℹ tests 6
+ℹ pass 6
 ℹ fail 0
 ```

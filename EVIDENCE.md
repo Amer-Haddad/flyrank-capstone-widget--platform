@@ -47,6 +47,15 @@
 - Rate-limited responses return API-standard JSON errors with `code: "RATE_LIMITED"`.
 - Spam submissions fail with `400 VALIDATION_ERROR` and never reach the persistence layer.
 
+## Phase 2.3 - Geo enrichment fallback proof
+
+### Enrichment behavior
+
+- Provider A (`ip-api.com`) is attempted first.
+- Provider B (`ipapi.co`) is attempted when provider A fails.
+- If both providers fail, the request still succeeds and the row is saved without geo metadata.
+- Provider failure simulation is configurable via `GEO_ENRICHMENT_FAILURE_MODE`.
+
 ### Validation command
 
 ```bash
@@ -57,16 +66,18 @@ node --test test/public-submissions.test.js
 ### Proof output
 
 ```text
-POST /api/public/submissions 201 17.576 ms - 347
+POST /api/public/submissions 201 2525.782 ms - 347
 ✔ POST /api/public/submissions creates a submission for valid payloads
-POST /api/public/submissions 400 2.454 ms - 195
+POST /api/public/submissions 400 3.344 ms - 195
 ✔ POST /api/public/submissions rejects invalid payloads with 400
-POST /api/public/submissions 400 1.390 ms - 214
+POST /api/public/submissions 400 1.405 ms - 214
 ✔ POST /api/public/submissions blocks spam honeypots
-POST /api/public/submissions 429 0.483 ms - 115
+POST /api/public/submissions 429 0.523 ms - 115
 ✔ POST /api/public/submissions rate-limits repeated requests
-ℹ tests 4
-ℹ pass 4
+✔ resolveGeoForIp falls back to the secondary provider when primary fails
+✔ resolveGeoForIp returns null when both providers fail
+ℹ tests 6
+ℹ pass 6
 ℹ fail 0
 ```
 
@@ -75,6 +86,8 @@ POST /api/public/submissions 429 0.483 ms - 115
 - Public route config in [src/routes/public.routes.js](C:/Users/USER/Desktop/flyrank-capstone-widget--platform/src/routes/public.routes.js)
 - Validator rules in [src/validators/public-submissions.validator.js](C:/Users/USER/Desktop/flyrank-capstone-widget--platform/src/validators/public-submissions.validator.js)
 - Submission service checks in [src/services/public-submissions.service.js](C:/Users/USER/Desktop/flyrank-capstone-widget--platform/src/services/public-submissions.service.js)
+- Geo enrichment service in [src/services/geo-enrichment.service.js](C:/Users/USER/Desktop/flyrank-capstone-widget--platform/src/services/geo-enrichment.service.js)
+- Database persistence hook in [src/repositories/public-submissions.repository.js](C:/Users/USER/Desktop/flyrank-capstone-widget--platform/src/repositories/public-submissions.repository.js)
 - Regression tests in [test/public-submissions.test.js](C:/Users/USER/Desktop/flyrank-capstone-widget--platform/test/public-submissions.test.js)
 
-This confirms the Phase 2.2 abuse protection gate is satisfied for public submissions under valid, invalid, spam, and burst-traffic conditions.
+This confirms the Phase 2.2 and 2.3 gates are satisfied for abuse protection and the geo fallback chain under valid, invalid, spam, rate-limited, and provider-failure conditions.

@@ -12,14 +12,14 @@ async function findWidgetById(widgetId) {
   return result.rows[0] || null;
 }
 
-async function insertSubmission({ widgetId, tenantId, payload, ip, userAgent }) {
+async function insertSubmission({ widgetId, tenantId, payload, ip, userAgent, geo }) {
   const query = `
-    INSERT INTO submissions (widget_id, tenant_id, payload, ip, user_agent, status)
-    VALUES ($1, $2, $3::jsonb, $4, $5, 'received')
-    RETURNING id, widget_id, tenant_id, status, created_at;
+    INSERT INTO submissions (widget_id, tenant_id, payload, ip, user_agent, geo, status)
+    VALUES ($1, $2, $3::jsonb, $4, $5, $6::jsonb, 'received')
+    RETURNING id, widget_id, tenant_id, status, created_at, geo;
   `;
 
-  const values = [widgetId, tenantId, JSON.stringify(payload), ip, userAgent];
+  const values = [widgetId, tenantId, JSON.stringify(payload), ip, userAgent, geo ? JSON.stringify(geo) : null];
   const result = await pool.query(query, values);
 
   return result.rows[0];

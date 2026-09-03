@@ -1,4 +1,5 @@
 const submissionsRepository = require("../repositories/public-submissions.repository");
+const { resolveGeoForIp } = require("./geo-enrichment.service");
 const { HttpError } = require("../utils/http-error");
 
 function getRequestIp(req) {
@@ -30,12 +31,16 @@ async function createSubmission({ widgetId, payload, req }) {
     throw new HttpError(403, "WIDGET_INACTIVE", "Widget is inactive.");
   }
 
+  const ipAddress = getRequestIp(req);
+  const geo = await resolveGeoForIp(ipAddress);
+
   const submission = await submissionsRepository.insertSubmission({
     widgetId: widget.id,
     tenantId: widget.tenant_id,
     payload,
-    ip: getRequestIp(req),
+    ip: ipAddress,
     userAgent: req.headers["user-agent"] || null,
+    geo,
   });
 
   return submission;

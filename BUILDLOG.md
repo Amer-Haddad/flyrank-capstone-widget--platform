@@ -63,6 +63,12 @@
 - Added the configured testing recipient and Gmail sender values to `.env` only.
 - Kept the email workflow safe: delivery problems are logged and recorded, but the original submission still returns a successful `201` response.
 
+## 2026-09-03 - Phase 2.5 gate output
+
+- Verified the cross-origin submission path successfully stores the enriched submission row and returns a successful response.
+- Verified the row persists even when geo provider fallback is needed and when the async email dependency fails.
+- Confirmed the final gate requirement: a public submission is the source of truth and dependency failures do not break it.
+
 ![alt text](<Screenshot 2026-09-03 184530.png>)
 
 ### Validation command

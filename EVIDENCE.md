@@ -67,6 +67,14 @@
 - The original submission remains valid even when email delivery fails.
 - The configured Gmail sender and test recipient are stored only in `.env`.
 
+## Phase 2.5 - Gate output proof
+
+### Gate requirement
+
+- Cross-origin public submission successfully stores the enriched row.
+- The request still succeeds when an external dependency fails.
+- The submission remains the source of truth and records the dependency failure instead of failing the client request.
+
 ### Validation command
 
 ```bash
@@ -105,4 +113,4 @@ POST /api/public/submissions 201 0.805 ms - 357
 - Database persistence hook in [src/repositories/public-submissions.repository.js](C:/Users/USER/Desktop/flyrank-capstone-widget--platform/src/repositories/public-submissions.repository.js)
 - Regression tests in [test/public-submissions.test.js](C:/Users/USER/Desktop/flyrank-capstone-widget--platform/test/public-submissions.test.js)
 
-This confirms the Phase 2.2, 2.3, and 2.4 gates are satisfied for abuse protection, geolocation fallback, and non-blocking side effects under valid, invalid, spam, rate-limited, provider-failure, and async email-failure conditions.
+This confirms the Phase 2.2, 2.3, 2.4, and 2.5 gates are satisfied for abuse protection, geolocation fallback, non-blocking side effects, and resilient submission storage under valid, invalid, spam, rate-limited, provider-failure, and async email-failure conditions.

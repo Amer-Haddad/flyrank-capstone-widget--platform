@@ -3,6 +3,7 @@ const cors = require("cors");
 const { rateLimit, ipKeyGenerator } = require("express-rate-limit");
 
 const publicSubmissionsController = require("../controllers/public-submissions.controller");
+const publicWidgetsController = require("../controllers/public-widgets.controller");
 const { validateRequest } = require("../middleware/validate-request");
 const { createSubmissionValidator } = require("../validators/public-submissions.validator");
 
@@ -67,6 +68,8 @@ const publicSubmissionWidgetLimiter = rateLimit({
 router.options("/submissions", submissionsCors, (_req, res) => {
   return res.sendStatus(204);
 });
+
+router.get("/widgets/:id/config", publicWidgetsController.getPublicWidgetConfig);
 
 router.post(
   "/submissions",

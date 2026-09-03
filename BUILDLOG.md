@@ -69,32 +69,30 @@
 - Verified the row persists even when geo provider fallback is needed and when the async email dependency fails.
 - Confirmed the final gate requirement: a public submission is the source of truth and dependency failures do not break it.
 
+## 2026-09-03 - Phase 3.1 widget delivery and caching
+
+- Added a public widget JS bundle at `/widget.js` with a versioned URL contract: `?id=<widgetId>&v=<version>`.
+- Added a public config endpoint at `/api/public/widgets/:id/config` that returns widget metadata and form field definitions.
+- Enforced cache timing per requirement: immutable 1-year cache for the script, short-lived cache for config data.
+- The widget script dynamically fetches config and renders a minimal form that submits back to `/api/public/submissions`.
+
 ![alt text](<Screenshot 2026-09-03 184530.png>)
 
 ### Validation command
 
 ```bash
 cd C:\Users\USER\Desktop\flyrank-capstone-widget--platform
-node --test test/public-submissions.test.js
+node --test test/widget-delivery.test.js
 ```
 
 ### Runtime evidence captured
 
 ```text
-POST /api/public/submissions 201 2425.056 ms - 347
-✔ POST /api/public/submissions creates a submission for valid payloads
-POST /api/public/submissions 400 3.537 ms - 195
-✔ POST /api/public/submissions rejects invalid payloads with 400
-POST /api/public/submissions 400 1.872 ms - 214
-✔ POST /api/public/submissions blocks spam honeypots
-POST /api/public/submissions 429 0.386 ms - 115
-✔ POST /api/public/submissions rate-limits repeated requests
-✔ resolveGeoForIp falls back to the secondary provider when primary fails
-✔ resolveGeoForIp returns null when both providers fail
-POST /api/public/submissions 201 0.805 ms - 357
-[email] failed after 3 attempts for submission 44444444-4444-4444-8444-444444444444: simulated email outage
-✔ POST /api/public/submissions does not fail when async email side effect fails
-ℹ tests 7
-ℹ pass 7
+GET /widget.js?id=11111111-1111-4111-8111-111111111111&v=7 200 1.563 ms - 4407
+✔ GET /widget.js returns a versioned widget script with long cache headers
+GET /api/public/widgets/11111111-1111-4111-8111-111111111111/config 200 1.036 ms - 511
+✔ GET /api/public/widgets/:id/config returns public config JSON
+ℹ tests 2
+ℹ pass 2
 ℹ fail 0
 ```

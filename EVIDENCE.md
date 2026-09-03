@@ -103,14 +103,40 @@ POST /api/public/submissions 201 0.805 ms - 357
 ℹ fail 0
 ```
 
+## Phase 3.1 - Widget delivery and caching proof
+
+### Delivery behavior
+
+- `/widget.js?id=<widgetId>&v=<version>` returns the widget bundle with an immutable long cache header.
+- `/api/public/widgets/:id/config` returns public widget metadata and form fields with short cache TTL.
+- The widget script fetches config and renders a minimal form that posts submissions back to the public ingestion API.
+
+### Validation command
+
+```bash
+cd C:\Users\USER\Desktop\flyrank-capstone-widget--platform
+node --test test/widget-delivery.test.js
+```
+
+### Proof output
+
+```text
+GET /widget.js?id=11111111-1111-4111-8111-111111111111&v=7 200 1.563 ms - 4407
+✔ GET /widget.js returns a versioned widget script with long cache headers
+GET /api/public/widgets/11111111-1111-4111-8111-111111111111/config 200 1.036 ms - 511
+✔ GET /api/public/widgets/:id/config returns public config JSON
+ℹ tests 2
+ℹ pass 2
+ℹ fail 0
+```
+
 ### Evidence of the implementation
 
-- Public route config in [src/routes/public.routes.js](C:/Users/USER/Desktop/flyrank-capstone-widget--platform/src/routes/public.routes.js)
-- Validator rules in [src/validators/public-submissions.validator.js](C:/Users/USER/Desktop/flyrank-capstone-widget--platform/src/validators/public-submissions.validator.js)
-- Submission service checks in [src/services/public-submissions.service.js](C:/Users/USER/Desktop/flyrank-capstone-widget--platform/src/services/public-submissions.service.js)
-- Geo enrichment service in [src/services/geo-enrichment.service.js](C:/Users/USER/Desktop/flyrank-capstone-widget--platform/src/services/geo-enrichment.service.js)
-- Email side-effect job in [src/services/submission-side-effects.service.js](C:/Users/USER/Desktop/flyrank-capstone-widget--platform/src/services/submission-side-effects.service.js)
-- Database persistence hook in [src/repositories/public-submissions.repository.js](C:/Users/USER/Desktop/flyrank-capstone-widget--platform/src/repositories/public-submissions.repository.js)
-- Regression tests in [test/public-submissions.test.js](C:/Users/USER/Desktop/flyrank-capstone-widget--platform/test/public-submissions.test.js)
+- Root widget delivery in [src/app.js](C:/Users/USER/Desktop/flyrank-capstone-widget--platform/src/app.js)
+- Public config route in [src/routes/public.routes.js](C:/Users/USER/Desktop/flyrank-capstone-widget--platform/src/routes/public.routes.js)
+- Config controller in [src/controllers/public-widgets.controller.js](C:/Users/USER/Desktop/flyrank-capstone-widget--platform/src/controllers/public-widgets.controller.js)
+- Service logic in [src/services/widgets.service.js](C:/Users/USER/Desktop/flyrank-capstone-widget--platform/src/services/widgets.service.js)
+- Widget db access in [src/repositories/widgets.repository.js](C:/Users/USER/Desktop/flyrank-capstone-widget--platform/src/repositories/widgets.repository.js)
+- Regression tests in [test/widget-delivery.test.js](C:/Users/USER/Desktop/flyrank-capstone-widget--platform/test/widget-delivery.test.js)
 
-This confirms the Phase 2.2, 2.3, 2.4, and 2.5 gates are satisfied for abuse protection, geolocation fallback, non-blocking side effects, and resilient submission storage under valid, invalid, spam, rate-limited, provider-failure, and async email-failure conditions.
+This confirms the Phase 2.2, 2.3, 2.4, 2.5, and 3.1 gates are satisfied for abuse protection, fallback resilience, continued submission storage, and public widget delivery with correct cache behavior.

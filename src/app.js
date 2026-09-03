@@ -10,7 +10,7 @@ const app = express();
 app.use(helmet());
 app.use(morgan("dev"));
 app.use(express.json({ limit: "64kb" }));
-app.use(express.urlencoded({ extended: false, limit: "64kb" }));
+app.use(express.urlencoded({ extended: true, limit: "64kb" }));
 
 app.use("/api", apiRoutes);
 

@@ -1,21 +1,45 @@
 function notFoundHandler(_req, res) {
   return res.status(404).json({
-    error: "Not Found",
-    message: "Route does not exist.",
+    success: false,
+    error: {
+      code: "ROUTE_NOT_FOUND",
+      message: "Route does not exist.",
+      details: [],
+    },
   });
 }
 
 function errorHandler(error, _req, res, _next) {
-  const statusCode = Number.isInteger(error.statusCode) ? error.statusCode : 500;
-  const message = error.message || "Internal Server Error";
+  let statusCode = Number.isInteger(error.statusCode) ? error.statusCode : 500;
+  let code = error.code || "INTERNAL_ERROR";
+  let message = error.message || "Internal Server Error";
+  let details = Array.isArray(error.details) ? error.details : [];
+
+  if (error.type === "entity.too.large") {
+    statusCode = 413;
+    code = "PAYLOAD_TOO_LARGE";
+    message = "Payload is too large.";
+    details = [];
+  }
+
+  if (error instanceof SyntaxError && error.status === 400 && "body" in error) {
+    statusCode = 400;
+    code = "INVALID_JSON";
+    message = "Request body must be valid JSON.";
+    details = [];
+  }
 
   if (statusCode >= 500) {
     console.error(error);
   }
 
   return res.status(statusCode).json({
-    error: "Request Failed",
-    message,
+    success: false,
+    error: {
+      code,
+      message,
+      details,
+    },
   });
 }
 

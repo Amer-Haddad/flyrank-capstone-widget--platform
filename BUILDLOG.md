@@ -26,3 +26,35 @@
 
 - Added a one-page design section directly in `README.md`.
 - Included problem, architecture, data model, API surface, resilience decisions, response contract, and non-goal.
+
+## 2026-09-03 - Phase 2.1 public submission endpoint
+
+- Implemented `POST /api/public/submissions` in the public route layer with CORS and preflight support.
+- Added request validation for `widgetId`, payload object schema, safe field limits, and honeypot spam detection.
+- Added per-IP and per-widget rate limiting to enforce 429 behavior under burst traffic.
+- Added `express.json` and URL-encoded request boundary enforcement for oversized payload rejection.
+- Verified the endpoint returns `201 Created` on valid requests and `400 Bad Request` for malformed payloads.
+- Verified the route rejects spam honeypot values before persistence.
+- Verified repeated requests from the same client are throttled with `429 Too Many Requests`.
+
+### Validation command
+
+```bash
+cd C:\Users\USER\Desktop\flyrank-capstone-widget--platform
+node --test test/public-submissions.test.js
+```
+
+### Runtime evidence captured
+
+```text
+POST /api/public/submissions 201 18.757 ms - 347
+✔ POST /api/public/submissions creates a submission for valid payloads
+POST /api/public/submissions 400 1.962 ms - 195
+✔ POST /api/public/submissions rejects invalid payloads with 400
+POST /api/public/submissions 400 1.405 ms - 214
+✔ POST /api/public/submissions blocks spam honeypots
+POST /api/public/submissions 429 0.372 ms - 115
+✔ POST /api/public/submissions rate-limits repeated requests
+ℹ pass 4
+ℹ fail 0
+```

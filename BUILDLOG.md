@@ -134,6 +134,13 @@ GET /widget-test.html -> 200 text/html; charset=utf-8
 ℹ fail 0
 ```
 
+## 2026-09-04 - Phase 4.5 embed snippet generation
+
+- Confirmed the reusable embed helper generates a complete `<script>` tag from `PUBLIC_BASE_URL`, widget ID, and bundle version.
+- Confirmed create, list, and read widget responses include the versioned `embedSnippet`.
+- Confirmed widget IDs are URL-encoded in generated snippets.
+- Documented the snippet contract in `README.md`.
+
 ## 2026-09-04 - Phase 4.2 tenant context and isolation
 
 - Added tenant context middleware that derives `req.tenant` only from authenticated owner claims.
@@ -171,7 +178,7 @@ GET /widget-test.html -> 200 text/html; charset=utf-8
 ✔ widget list and read routes use the authenticated tenant
 ✔ widget management routes reject unauthenticated requests
 ✔ widget creation rejects invalid field definitions
-ℹ tests 24
-ℹ pass 24
+ℹ tests 25
+ℹ pass 25
 ℹ fail 0
 ```

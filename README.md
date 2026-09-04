@@ -99,6 +99,9 @@ Phase 1 design, API contracts, response format, status-code matrix, and explicit
 | Method | Path | Purpose |
 | --- | --- | --- |
 | `GET` | `/api/health` | Runtime health check |
+| `POST` | `/api/widgets` | Authenticated widget creation; returns an embed snippet |
+| `GET` | `/api/widgets` | Authenticated tenant-scoped widget list |
+| `GET` | `/api/widgets/:id` | Authenticated tenant-scoped widget details and embed snippet |
 | `GET` | `/widget.js?id=<widgetId>&v=<version>` | Versioned embeddable widget bundle |
 | `GET` | `/api/public/widgets/:id/config` | Public widget configuration |
 | `OPTIONS` | `/api/public/submissions` | CORS preflight |
@@ -123,6 +126,12 @@ npm run serve:widget-test
 With the application running on port 3000, open
 `http://localhost:5500/widget-test.html` to verify cross-origin widget
 delivery and form submission.
+
+Widget management responses include an `embedSnippet` value in this format:
+
+```html
+<script src="http://localhost:3000/widget.js?id=<widgetId>&v=<version>"></script>
+```
 
 ## Phase 1.4 Gate output - One-page design
 

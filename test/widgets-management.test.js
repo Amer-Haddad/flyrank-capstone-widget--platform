@@ -10,6 +10,7 @@ process.env.PUBLIC_BASE_URL = "https://api.example.test";
 const widgetsRouter = require("../src/routes");
 const widgetsService = require("../src/services/widgets-management.service");
 const widgetsRepository = require("../src/repositories/widgets.repository");
+const { createEmbedSnippet } = require("../src/utils/embed-snippet");
 
 function token() {
   return jwt.sign({ sub: "user-a", tenantId: "tenant-a", role: "owner" }, process.env.JWT_SECRET, {
@@ -76,12 +77,20 @@ test("widget list and read routes use the authenticated tenant", async () => {
     const readResponse = await fetch(`http://127.0.0.1:${port}/api/widgets/${widgetId}`, { headers });
     assert.equal(listResponse.status, 200);
     assert.equal(readResponse.status, 200);
+    assert.match((await listResponse.json()).data[0].embedSnippet, /widget\.js\?id=22222222-2222-4222-8222-222222222222&v=1/);
     assert.equal((await readResponse.json()).data.tenantId, "tenant-a");
   } finally {
     widgetsRepository.listWidgetsForTenant = originalList;
     widgetsRepository.findWidgetConfigForTenant = originalFind;
     server.close();
   }
+});
+
+test("embed snippet generation includes the configured base URL and version", () => {
+  assert.equal(
+    createEmbedSnippet("widget id", 7),
+    '<script src="https://api.example.test/widget.js?id=widget%20id&v=7"></script>',
+  );
 });
 
 test("widget management routes reject unauthenticated requests", async () => {

@@ -246,7 +246,21 @@ cross-origin widget script reference.
 ✔ widget creation rejects invalid field definitions
 ```
 
-The complete suite now passes with 24 tests and 0 failures.
+The complete suite now passes with 25 tests and 0 failures.
+
+## Phase 4.5 - Embed snippet generation proof
+
+- `createEmbedSnippet` returns a complete script tag using the configured public base URL.
+- Widget IDs and versions are URL-encoded into the script URL.
+- Widget create, list, and read responses expose the generated `embedSnippet`.
+
+### Automated proof
+
+```text
+✔ widget create returns 201 and an embed snippet
+✔ widget list and read routes include the authenticated widget snippet
+✔ embed snippet generation includes the configured base URL and version
+```
 
 ## Phase 4.4 - Widget management update/delete proof
 

@@ -46,8 +46,31 @@ async function insertSubmissionEvent({ submissionId, tenantId, eventType, eventS
   return result.rows[0];
 }
 
+async function findSubmissionsByTenant({ tenantId, widgetId, limit = 50, offset = 0 }) {
+  const values = [tenantId];
+  const filters = ["tenant_id = $1"];
+
+  if (widgetId) {
+    values.push(widgetId);
+    filters.push(`widget_id = $${values.length}`);
+  }
+
+  values.push(limit, offset);
+  const query = `
+    SELECT id, widget_id, tenant_id, payload, ip, user_agent, geo, status, created_at
+    FROM submissions
+    WHERE ${filters.join(" AND ")}
+    ORDER BY created_at DESC
+    LIMIT $${values.length - 1} OFFSET $${values.length};
+  `;
+
+  const result = await pool.query(query, values);
+  return result.rows;
+}
+
 module.exports = {
   findWidgetById,
   insertSubmission,
   insertSubmissionEvent,
+  findSubmissionsByTenant,
 };

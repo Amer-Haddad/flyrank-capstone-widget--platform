@@ -133,3 +133,10 @@ GET /widget-test.html -> 200 text/html; charset=utf-8
 ℹ pass 14
 ℹ fail 0
 ```
+
+## 2026-09-04 - Phase 4.2 tenant context and isolation
+
+- Added tenant context middleware that derives `req.tenant` only from authenticated owner claims.
+- Added tenant-scoped widget lookup using both `widget_id` and `tenant_id`.
+- Added tenant-scoped submission listing with optional widget filtering and pagination parameters.
+- Added tests proving missing tenant context is rejected and cross-tenant widget lookups return no record.

@@ -38,6 +38,19 @@ async function findPublicWidgetConfig(widgetId) {
   return result.rows[0] || null;
 }
 
+async function findWidgetByIdForTenant(widgetId, tenantId) {
+  const query = `
+    SELECT id, tenant_id, type, title, description, button_text, version, is_active, display_options
+    FROM widgets
+    WHERE id = $1 AND tenant_id = $2
+    LIMIT 1;
+  `;
+
+  const result = await pool.query(query, [widgetId, tenantId]);
+  return result.rows[0] || null;
+}
+
 module.exports = {
   findPublicWidgetConfig,
+  findWidgetByIdForTenant,
 };

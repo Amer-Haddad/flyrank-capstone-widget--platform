@@ -210,3 +210,20 @@ cross-origin widget script reference.
 ✔ protected routes accept a valid owner token and expose tenant context
 ✔ protected routes reject tokens missing tenant claims
 ```
+
+## Phase 4.2 - Tenant context and isolation proof
+
+- `requireTenantContext` rejects requests without validated owner tenant claims with `401 UNAUTHORIZED`.
+- Authenticated tenant context is exposed as `req.tenant` with the owner user ID and tenant ID.
+- Widget owner lookups require both widget ID and tenant ID.
+- Submission list queries always include `tenant_id`; optional widget filters do not remove tenant scoping.
+- Cross-tenant widget lookups return no record in the isolation test.
+
+### Automated proof
+
+```text
+✔ tenant context is derived from authenticated owner claims
+✔ tenant context rejects requests without authenticated tenant claims
+✔ widget repository scopes lookup by widget ID and tenant ID
+✔ submission repository scopes list queries by tenant ID
+```

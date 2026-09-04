@@ -247,6 +247,23 @@ POST /api/public/submissions 200
 - Valid visitor email addresses are set as `Reply-To`, while `MAIL_FROM`
   remains the configured company sender.
 
+## 2026-09-04 - Dashboard IP filter
+
+- Added an exact visitor-IP filter to `GET /api/dashboard/submissions`.
+- Kept the filter tenant-scoped and parameterized in SQL.
+- Added the stored IP address to the admin dashboard submissions table.
+
+## 2026-09-04 - Dashboard IP search button
+
+- Added a dedicated `Search by IP` button to run the dashboard IP filter.
+- Kept `Refresh dashboard` for loading the unfiltered dashboard view.
+
+## 2026-09-04 - Dashboard request grouping
+
+- The dashboard now displays all requests by default.
+- Added a grouping dropdown for widget, country, or IP address.
+- Grouped views show the request count for each selected value.
+
 ## 2026-09-04 - Admin connection error message
 
 - Confirmed the reported `NetworkError` was caused by the API not running on port 3000.

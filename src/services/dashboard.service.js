@@ -13,6 +13,10 @@ function parseQuery(query) {
     throw new HttpError(400, "INVALID_QUERY", "widgetId must be a valid UUID.");
   }
 
+  if (query.ip && (query.ip.length > 45 || /[\s,]/.test(query.ip))) {
+    throw new HttpError(400, "INVALID_QUERY", "ip must be a valid IP filter.");
+  }
+
   const from = query.from ? new Date(query.from) : null;
   const to = query.to ? new Date(query.to) : null;
   if ((from && Number.isNaN(from.getTime())) || (to && Number.isNaN(to.getTime()))) {
@@ -24,6 +28,7 @@ function parseQuery(query) {
 
   return {
     widgetId: query.widgetId || null,
+    ip: query.ip || null,
     from: from ? from.toISOString() : null,
     to: to ? to.toISOString() : null,
     limit: pageSize,

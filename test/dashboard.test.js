@@ -36,7 +36,7 @@ test("dashboard submissions returns tenant-scoped paginated results", async () =
 
   try {
     const response = await fetch(
-      `http://127.0.0.1:${port}/api/dashboard/submissions?page=2&pageSize=2&from=2026-01-01T00:00:00.000Z`,
+      `http://127.0.0.1:${port}/api/dashboard/submissions?page=2&pageSize=2&ip=203.0.113.10&from=2026-01-01T00:00:00.000Z`,
       { headers: { Authorization: `Bearer ${token()}` } },
     );
     const body = await response.json();
@@ -45,6 +45,7 @@ test("dashboard submissions returns tenant-scoped paginated results", async () =
     assert.equal(received.tenantId, "tenant-a");
     assert.equal(received.limit, 2);
     assert.equal(received.offset, 2);
+    assert.equal(received.ip, "203.0.113.10");
     assert.equal(body.data.items.length, 1);
     assert.deepEqual(body.data.pagination, { page: 2, pageSize: 2, total: 6, totalPages: 3 });
   } finally {
@@ -66,7 +67,7 @@ test("dashboard submissions rejects unauthenticated requests", async () => {
 test("dashboard submissions rejects invalid pagination and dates", async () => {
   const { server, port } = await buildServer();
   try {
-    for (const query of ["page=0", "from=not-a-date"]) {
+    for (const query of ["page=0", "from=not-a-date", "ip=not a valid ip"]) {
       const response = await fetch(
         `http://127.0.0.1:${port}/api/dashboard/submissions?${query}`,
         { headers: { Authorization: `Bearer ${token()}` } },

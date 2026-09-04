@@ -30,7 +30,8 @@ const server = http.createServer((req, res) => {
 });
 
 server.listen(port, () => {
-  console.log(`Admin interface is running at http://localhost:${port}/admin.html`);
+  const page = port === 5501 ? "public.html" : "admin.html";
+  console.log(`${page} interface is running at http://localhost:${port}/${page}`);
 });
 
 function shutdown() {

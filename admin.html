@@ -101,6 +101,13 @@
     <section class="card">
       <h2>Dashboard</h2>
       <div class="actions">
+        <label for="dashboard-group">Group requests by</label>
+        <select id="dashboard-group">
+          <option value="all">All requests</option>
+          <option value="widget">Widget</option>
+          <option value="location">Country</option>
+          <option value="ip">IP address</option>
+        </select>
         <button id="refresh-dashboard" type="button">Refresh dashboard</button>
         <button id="open-public" class="secondary" type="button">Open public form</button>
       </div>
@@ -115,6 +122,7 @@
     const widgetStatus = document.getElementById('widget-status');
     const widgetsOutput = document.getElementById('widgets-output');
     const dashboardOutput = document.getElementById('dashboard-output');
+    const dashboardGroup = document.getElementById('dashboard-group');
     const state = { widgets: [] };
 
     apiInput.value = localStorage.getItem('flyrankApiUrl') || apiInput.value;
@@ -156,14 +164,28 @@
     async function loadDashboard() {
       try {
         const headers = authHeaders();
+        const query = new URLSearchParams({ page: '1', pageSize: '100' });
         const [submissions, overview, widgetStats, geo] = await Promise.all([
-          request('/api/dashboard/submissions?page=1&pageSize=10', { headers }),
+          request(`/api/dashboard/submissions?${query.toString()}`, { headers }),
           request('/api/dashboard/stats/overview', { headers }),
           request('/api/dashboard/stats/widgets', { headers }),
           request('/api/dashboard/stats/geo', { headers })
         ]);
-        dashboardOutput.innerHTML = `<p><strong>Total submissions:</strong> ${overview.total} | <strong>Showing:</strong> ${submissions.items.length}</p>
-          <h3>Recent submissions</h3>${submissions.items.length ? `<table><thead><tr><th>Date</th><th>Widget</th><th>Status</th></tr></thead><tbody>${submissions.items.map((item) => `<tr><td>${escapeHtml(item.created_at)}</td><td>${escapeHtml(item.widget_id)}</td><td>${escapeHtml(item.status)}</td></tr>`).join('')}</tbody></table>` : '<p>No submissions yet.</p>'}
+        const groups = {};
+        if (dashboardGroup.value === 'all') {
+          dashboardOutput.innerHTML = `<p><strong>Total submissions:</strong> ${overview.total} | <strong>Showing:</strong> ${submissions.items.length}</p>
+            <h3>All requests</h3>${submissions.items.length ? `<table><thead><tr><th>Date</th><th>Widget</th><th>IP address</th><th>Status</th></tr></thead><tbody>${submissions.items.map((item) => `<tr><td>${escapeHtml(item.created_at)}</td><td>${escapeHtml(item.widget_id)}</td><td>${escapeHtml(item.ip || 'Unknown')}</td><td>${escapeHtml(item.status)}</td></tr>`).join('')}</tbody></table>` : '<p>No submissions yet.</p>'}`;
+        } else {
+          submissions.items.forEach((item) => {
+            const key = dashboardGroup.value === 'widget' ? item.widget_id
+              : dashboardGroup.value === 'ip' ? (item.ip || 'Unknown')
+                : (item.geo && item.geo.country) || 'Unknown';
+            groups[key] = (groups[key] || 0) + 1;
+          });
+          dashboardOutput.innerHTML = `<p><strong>Total submissions:</strong> ${overview.total} | <strong>Showing:</strong> ${submissions.items.length}</p>
+            <h3>Requests grouped by ${dashboardGroup.value === 'location' ? 'country' : dashboardGroup.value}</h3>${Object.keys(groups).length ? `<table><thead><tr><th>${dashboardGroup.value === 'location' ? 'Country' : dashboardGroup.value === 'widget' ? 'Widget' : 'IP address'}</th><th>Requests</th></tr></thead><tbody>${Object.entries(groups).sort((a, b) => b[1] - a[1]).map(([key, count]) => `<tr><td>${escapeHtml(key)}</td><td>${count}</td></tr>`).join('')}</tbody></table>` : '<p>No submissions yet.</p>'}`;
+        }
+        dashboardOutput.innerHTML += `
           <h3>By widget</h3><pre>${escapeHtml(JSON.stringify(widgetStats, null, 2))}</pre>
           <h3>By location</h3><pre>${escapeHtml(JSON.stringify(geo, null, 2))}</pre>`;
       } catch (error) { setStatus(sessionStatus, error.message, 'error'); }
@@ -202,6 +224,7 @@
     });
     document.getElementById('refresh-widgets').addEventListener('click', loadWidgets);
     document.getElementById('refresh-dashboard').addEventListener('click', loadDashboard);
+    dashboardGroup.addEventListener('change', loadDashboard);
     document.getElementById('open-public').addEventListener('click', () => {
       const widget = state.widgets[0];
       if (widget) window.open(publicFormUrl(widget.id), '_blank');

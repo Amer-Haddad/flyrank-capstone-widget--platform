@@ -101,13 +101,17 @@ async function findSubmissionsByTenant({ tenantId, widgetId, limit = 50, offset 
   return result.rows;
 }
 
-async function findDashboardSubmissions({ tenantId, widgetId, from, to, limit, offset }) {
+async function findDashboardSubmissions({ tenantId, widgetId, ip, from, to, limit, offset }) {
   const values = [tenantId];
   const filters = ["tenant_id = $1"];
 
   if (widgetId) {
     values.push(widgetId);
     filters.push(`widget_id = $${values.length}`);
+  }
+  if (ip) {
+    values.push(ip);
+    filters.push(`ip = $${values.length}`);
   }
   if (from) {
     values.push(from);

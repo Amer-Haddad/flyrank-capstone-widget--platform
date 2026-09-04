@@ -328,6 +328,22 @@ The complete suite passes with 36 tests and 0 failures.
 - Verified `GET http://localhost:5501/public.html?widget=test-widget` returned `200`.
 - Verified the response contained the public form markup.
 
+## Dashboard IP filter proof
+
+- Dashboard submissions accept an exact `ip` query parameter.
+- IP filtering remains restricted by the authenticated tenant and uses
+  parameterized SQL.
+- The admin dashboard displays each submission's stored IP address.
+- Dashboard tests cover forwarding the IP filter and rejecting invalid values.
+- The admin dashboard includes a `Search by IP` button that runs the filter.
+
+## Dashboard request grouping proof
+
+- The default dashboard view displays all loaded requests with their IP
+  addresses.
+- The grouping dropdown supports widget, country, and IP address.
+- Grouped results display a request count for every selected value.
+
 The complete suite passes with 38 tests and 0 failures.
 
 ## Phase 4.11 - Documentation and acceptance evidence proof

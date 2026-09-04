@@ -265,6 +265,8 @@ admin page, and run `npm run serve:public` on port 5501 for the public page.
 The admin page calls authenticated APIs. The public page calls only public
 configuration and submission APIs, so a random visitor does not need an owner
 token.
+The admin dashboard shows all requests by default. Use its grouping dropdown to
+view requests grouped by widget, country, or IP address.
 
 ## Reliability and security behavior
 

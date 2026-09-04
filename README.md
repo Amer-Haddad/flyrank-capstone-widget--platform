@@ -58,6 +58,19 @@ Health endpoint:
 GET /api/health
 ```
 
+## Widget test page
+
+Start the application on port 3000, then serve the plain HTML test page from a
+different origin and port:
+
+```bash
+npm run serve:widget-test
+```
+
+Open `http://localhost:5500/widget-test.html`. The page loads the versioned
+widget bundle from `http://localhost:3000`, fetches its public configuration,
+and renders the submission form.
+
 ## Design and API contract
 
 Phase 1 design, API contracts, response format, status-code matrix, and explicit non-goal are documented in [DESIGN.md](C:/Users/USER/Desktop/flyrank-capstone-widget--platform/DESIGN.md).

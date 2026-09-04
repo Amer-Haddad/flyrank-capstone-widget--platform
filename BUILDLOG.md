@@ -85,6 +85,27 @@ cd C:\Users\USER\Desktop\flyrank-capstone-widget--platform
 node --test test/widget-delivery.test.js
 ```
 
+## 2026-09-04 - Phase 3.2 minimal widget client and second-origin test page
+
+- Confirmed the widget bundle fetches public configuration and renders fields dynamically.
+- Confirmed the rendered form submits JSON to `POST /api/public/submissions`.
+- Added `npm run serve:widget-test`, a dependency-free static server for `widget-test.html`.
+- The test page is served on port 5500 while the widget API runs on port 3000, providing a separate-origin CORS test.
+- Extended widget delivery tests to verify renderer and submission endpoint code are present in the delivered bundle.
+
+### Phase 3.2 validation evidence
+
+```text
+> npm run serve:widget-test
+Widget test page is running at http://localhost:5500/widget-test.html
+GET /widget-test.html -> 200 text/html; charset=utf-8
+
+> npm test
+ℹ tests 9
+ℹ pass 9
+ℹ fail 0
+```
+
 ### Runtime evidence captured
 
 ```text

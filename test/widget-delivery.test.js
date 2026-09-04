@@ -27,6 +27,9 @@ test("GET /widget.js returns a versioned widget script with long cache headers",
     assert.equal(response.status, 200);
     assert.match(response.headers.get("cache-control"), /public, max-age=31536000, immutable/i);
     assert.match(body, /fetch\(configUrl/i);
+    assert.match(body, /function renderForm\(config\)/i);
+    assert.match(body, /POST/i);
+    assert.match(body, /api\/public\/submissions/i);
   } finally {
     server.close();
   }

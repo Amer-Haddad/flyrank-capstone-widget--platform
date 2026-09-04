@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "nodemon src/server.js",
     "start": "node src/server.js",
+    "serve:widget-test": "node scripts/widget-page-server.js",
     "migrate": "node src/database/apply-schema.js",
     "test": "node --test"
   },

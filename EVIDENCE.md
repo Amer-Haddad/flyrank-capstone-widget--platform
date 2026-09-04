@@ -140,3 +140,32 @@ GET /api/public/widgets/11111111-1111-4111-8111-111111111111/config 200 1.036 ms
 - Regression tests in [test/widget-delivery.test.js](C:/Users/USER/Desktop/flyrank-capstone-widget--platform/test/widget-delivery.test.js)
 
 This confirms the Phase 2.2, 2.3, 2.4, 2.5, and 3.1 gates are satisfied for abuse protection, fallback resilience, continued submission storage, and public widget delivery with correct cache behavior.
+
+## Phase 3.2 - Minimal widget client and second-origin test page proof
+
+### Test-page command
+
+```text
+npm run serve:widget-test
+Widget test page is running at http://localhost:5500/widget-test.html
+```
+
+### Browser verification path
+
+- Open `http://localhost:5500/widget-test.html`.
+- The page loads `/widget.js` from `http://localhost:3000`.
+- The widget requests `/api/public/widgets/:id/config` and renders the configured fields.
+- Submitting the form sends JSON to `/api/public/submissions`.
+- The different ports prove the browser integration is cross-origin.
+
+### Automated proof
+
+```text
+✔ GET /widget.js returns a versioned widget script with long cache headers
+  bundle contains config fetch, form renderer, and public submission request
+✔ GET /api/public/widgets/:id/config returns public config JSON
+```
+
+The complete test suite passed with 9 tests and 0 failures. The second-origin
+page server returned `200 text/html; charset=utf-8` and contained the
+cross-origin widget script reference.

@@ -101,6 +101,42 @@ async function findSubmissionsByTenant({ tenantId, widgetId, limit = 50, offset 
   return result.rows;
 }
 
+async function findDashboardSubmissions({ tenantId, widgetId, from, to, limit, offset }) {
+  const values = [tenantId];
+  const filters = ["tenant_id = $1"];
+
+  if (widgetId) {
+    values.push(widgetId);
+    filters.push(`widget_id = $${values.length}`);
+  }
+  if (from) {
+    values.push(from);
+    filters.push(`created_at >= $${values.length}`);
+  }
+  if (to) {
+    values.push(to);
+    filters.push(`created_at <= $${values.length}`);
+  }
+
+  const filterSql = filters.join(" AND ");
+  const listValues = [...values, limit, offset];
+  const [itemsResult, countResult] = await Promise.all([
+    pool.query(
+      `SELECT id, widget_id, tenant_id, payload, ip, user_agent, geo, status, created_at
+       FROM submissions WHERE ${filterSql}
+       ORDER BY created_at DESC
+       LIMIT $${listValues.length - 1} OFFSET $${listValues.length}`,
+      listValues,
+    ),
+    pool.query(`SELECT COUNT(*)::int AS total FROM submissions WHERE ${filterSql}`, values),
+  ]);
+
+  return {
+    items: itemsResult.rows,
+    total: countResult.rows[0].total,
+  };
+}
+
 module.exports = {
   findWidgetById,
   reserveIdempotencyKey,
@@ -108,4 +144,5 @@ module.exports = {
   insertSubmission,
   insertSubmissionEvent,
   findSubmissionsByTenant,
+  findDashboardSubmissions,
 };

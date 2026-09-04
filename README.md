@@ -106,6 +106,7 @@ Phase 1 design, API contracts, response format, status-code matrix, and explicit
 | `GET` | `/api/public/widgets/:id/config` | Public widget configuration |
 | `OPTIONS` | `/api/public/submissions` | CORS preflight |
 | `POST` | `/api/public/submissions` | Validated, rate-limited lead submission |
+| `GET` | `/api/dashboard/submissions` | Authenticated tenant-scoped submission list with filters and pagination |
 
 Public submissions may include an `Idempotency-Key` header. Repeating the same
 key and request replays the stored response without creating another submission;
@@ -113,8 +114,8 @@ reusing the key with different data returns a conflict.
 
 ## Limitations
 
-- Owner authentication, widget CRUD, and dashboard analytics are documented
-  contracts but are not implemented in this milestone.
+- Owner authentication, widget CRUD, and dashboard submission listing are
+  implemented; dashboard aggregation analytics remain future work.
 - The widget client is intentionally minimal and supports the configured
   text/email fields without an advanced visual builder.
 - Geo enrichment and email notification are best-effort dependencies; the

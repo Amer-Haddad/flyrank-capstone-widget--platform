@@ -301,7 +301,23 @@ The complete suite passes with 26 tests and 0 failures.
 ✔ POST /api/public/submissions does not fail when async email side effect fails
 ```
 
-The complete suite passes with 27 tests and 0 failures.
+The complete suite passes with 30 tests and 0 failures.
+
+## Phase 4.9 - Dashboard submissions API proof
+
+- `GET /api/dashboard/submissions` requires owner authentication.
+- Every dashboard query receives the authenticated tenant ID.
+- Supported filters are `widgetId`, `from`, `to`, `page`, and `pageSize`.
+- Responses use stable `{ items, pagination }` data with total and total-pages values.
+- Invalid filters return `400 INVALID_QUERY`.
+
+### Automated proof
+
+```text
+✔ dashboard submissions returns tenant-scoped paginated results
+✔ dashboard submissions rejects unauthenticated requests
+✔ dashboard submissions rejects invalid pagination and dates
+```
 
 ## Phase 4.4 - Widget management update/delete proof
 

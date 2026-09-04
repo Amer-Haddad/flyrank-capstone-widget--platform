@@ -1,6 +1,7 @@
 const { Router } = require("express");
 
 const healthController = require("../controllers/health.controller");
+const dashboardController = require("../controllers/dashboard.controller");
 const publicRoutes = require("./public.routes");
 const widgetsController = require("../controllers/widgets.controller");
 const { authenticateOwner } = require("../middleware/authenticate-owner");
@@ -18,5 +19,6 @@ router.get("/widgets", widgetsController.listWidgets);
 router.get("/widgets/:id", widgetIdValidator, validateRequest, widgetsController.getWidget);
 router.patch("/widgets/:id", widgetIdValidator, updateWidgetValidator, validateRequest, widgetsController.updateWidget);
 router.delete("/widgets/:id", widgetIdValidator, validateRequest, widgetsController.deleteWidget);
+router.get("/dashboard/submissions", authenticateOwner, requireTenantContext, dashboardController.listSubmissions);
 
 module.exports = router;

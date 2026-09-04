@@ -186,6 +186,14 @@ POST /api/public/submissions 200
 - Job failures are surfaced through job-scoped error logs and do not reject the submission request.
 - Added a direct asynchronous job execution test.
 
+## 2026-09-04 - Phase 4.9 dashboard submissions API
+
+- Added authenticated `GET /api/dashboard/submissions`.
+- Added tenant-scoped submission listing with optional widget, date-range, and pagination filters.
+- Added stable `{ items, pagination }` response data.
+- Added validation for page, page size, widget UUID, and ISO date filters.
+- Added tests for tenant context, pagination, unauthorized access, and invalid queries.
+
 ### Runtime evidence captured
 
 ```text

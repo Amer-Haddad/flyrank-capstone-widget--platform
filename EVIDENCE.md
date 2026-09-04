@@ -271,6 +271,22 @@ The complete suite now passes with 25 tests and 0 failures.
 
 The complete suite passes with 25 tests and 0 failures.
 
+## Phase 4.7 - Submission idempotency proof
+
+- Public submissions accept the `Idempotency-Key` header.
+- The request hash includes the widget ID and payload, preventing a key from being reused for a different request.
+- Keys are scoped using the resolved tenant and widget.
+- Completed identical requests replay the original submission response without a second insert.
+- Conflicting or in-progress key reuse returns a structured `409` error.
+
+### Automated proof
+
+```text
+✔ POST /api/public/submissions replays an identical idempotent request
+```
+
+The complete suite passes with 26 tests and 0 failures.
+
 ## Phase 4.4 - Widget management update/delete proof
 
 - `PATCH /api/widgets/:id` updates only the authenticated tenant's widget.

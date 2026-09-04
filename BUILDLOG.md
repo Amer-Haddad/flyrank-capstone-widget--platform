@@ -158,6 +158,26 @@ Access-Control-Allow-Origin: http://localhost:5500
 ℹ fail 0
 ```
 
+## 2026-09-04 - Phase 4.7 submission idempotency
+
+- Added `Idempotency-Key` support to public submissions and exposed it in CORS allowed headers.
+- Added SHA-256 request hashing over the widget ID and payload.
+- Reserved keys are scoped to the resolved tenant and widget.
+- Identical completed requests replay the stored response with `200` and do not create another submission.
+- Reuse with a different request body returns `409 IDEMPOTENCY_CONFLICT`; concurrent in-progress reuse returns `409 IDEMPOTENCY_IN_PROGRESS`.
+- Stored idempotency records expire after 24 hours.
+
+### Runtime evidence captured
+
+```text
+POST /api/public/submissions 201
+POST /api/public/submissions 200
+✔ POST /api/public/submissions replays an identical idempotent request
+ℹ tests 26
+ℹ pass 26
+ℹ fail 0
+```
+
 ## 2026-09-04 - Phase 4.2 tenant context and isolation
 
 - Added tenant context middleware that derives `req.tenant` only from authenticated owner claims.

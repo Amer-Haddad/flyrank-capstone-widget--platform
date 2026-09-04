@@ -107,6 +107,10 @@ Phase 1 design, API contracts, response format, status-code matrix, and explicit
 | `OPTIONS` | `/api/public/submissions` | CORS preflight |
 | `POST` | `/api/public/submissions` | Validated, rate-limited lead submission |
 
+Public submissions may include an `Idempotency-Key` header. Repeating the same
+key and request replays the stored response without creating another submission;
+reusing the key with different data returns a conflict.
+
 ## Limitations
 
 - Owner authentication, widget CRUD, and dashboard analytics are documented

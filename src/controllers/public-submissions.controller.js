@@ -2,16 +2,16 @@ const submissionsService = require("../services/public-submissions.service");
 
 async function createSubmission(req, res, next) {
   try {
-    const submission = await submissionsService.createSubmission({
+    const result = await submissionsService.createSubmission({
       widgetId: req.body.widgetId,
       payload: req.body.payload,
       req,
     });
 
-    return res.status(201).json({
+    return res.status(result.replayed ? 200 : 201).json({
       success: true,
       data: {
-        submission,
+        submission: result.submission,
       },
     });
   } catch (error) {

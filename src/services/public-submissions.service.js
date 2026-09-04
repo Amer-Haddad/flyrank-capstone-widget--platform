@@ -2,6 +2,7 @@ const submissionsRepository = require("../repositories/public-submissions.reposi
 const { resolveGeoForIp } = require("./geo-enrichment.service");
 const { enqueueSubmissionSideEffects } = require("./submission-side-effects.service");
 const { HttpError } = require("../utils/http-error");
+const { createRequestHash, getIdempotencyKey } = require("../utils/idempotency");
 
 function getRequestIp(req) {
   const forwardedFor = req.headers["x-forwarded-for"];
@@ -32,6 +33,31 @@ async function createSubmission({ widgetId, payload, req }) {
     throw new HttpError(403, "WIDGET_INACTIVE", "Widget is inactive.");
   }
 
+  const idempotencyKey = getIdempotencyKey(req);
+  let idempotencyReservation;
+  if (idempotencyKey) {
+    idempotencyReservation = await submissionsRepository.reserveIdempotencyKey({
+      key: idempotencyKey,
+      tenantId: widget.tenant_id,
+      scope: `public-submission:${widget.id}`,
+      requestHash: createRequestHash({ widgetId: widget.id, payload }),
+    });
+
+    if (idempotencyReservation.status === "existing") {
+      const record = idempotencyReservation.record;
+      if (!record
+        || record.tenant_id !== widget.tenant_id
+        || record.scope !== `public-submission:${widget.id}`
+        || record.request_hash !== createRequestHash({ widgetId: widget.id, payload })) {
+        throw new HttpError(409, "IDEMPOTENCY_CONFLICT", "Idempotency key was already used for a different request.");
+      }
+      if (record.response_status === null || !record.response_body) {
+        throw new HttpError(409, "IDEMPOTENCY_IN_PROGRESS", "An identical request is already being processed.");
+      }
+      return { submission: record.response_body.data.submission, replayed: true };
+    }
+  }
+
   const ipAddress = getRequestIp(req);
   const geo = await resolveGeoForIp(ipAddress);
 
@@ -44,6 +70,15 @@ async function createSubmission({ widgetId, payload, req }) {
     geo,
   });
 
+  if (idempotencyKey) {
+    await submissionsRepository.completeIdempotencyKey({
+      key: idempotencyKey,
+      tenantId: widget.tenant_id,
+      responseStatus: 201,
+      responseBody: { success: true, data: { submission } },
+    });
+  }
+
   enqueueSubmissionSideEffects({
     submissionId: submission.id,
     widgetId: submission.widget_id,
@@ -53,7 +88,7 @@ async function createSubmission({ widgetId, payload, req }) {
     userAgent: req.headers["user-agent"] || null,
   });
 
-  return submission;
+  return { submission, replayed: false };
 }
 
 module.exports = {

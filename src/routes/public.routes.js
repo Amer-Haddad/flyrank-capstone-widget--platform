@@ -12,7 +12,7 @@ const router = Router();
 const submissionsCors = cors({
   origin: true,
   methods: ["POST", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
+  allowedHeaders: ["Content-Type", "Authorization", "Idempotency-Key"],
   credentials: false,
 });
 

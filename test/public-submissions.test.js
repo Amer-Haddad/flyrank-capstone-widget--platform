@@ -10,6 +10,8 @@ const submissionsRepository = require("../src/repositories/public-submissions.re
 const originalFindWidgetById = submissionsRepository.findWidgetById;
 const originalInsertSubmission = submissionsRepository.insertSubmission;
 const originalInsertSubmissionEvent = submissionsRepository.insertSubmissionEvent;
+const originalReserveIdempotencyKey = submissionsRepository.reserveIdempotencyKey;
+const originalCompleteIdempotencyKey = submissionsRepository.completeIdempotencyKey;
 
 function buildServer() {
   return new Promise((resolve) => {
@@ -245,6 +247,7 @@ test("POST /api/public/submissions does not fail when async email side effect fa
     tenant_id: "22222222-2222-4222-8222-222222222222",
     is_active: true,
   });
+
   submissionsRepository.insertSubmission = async ({ widgetId, tenantId, payload, ip, userAgent, geo }) => ({
     id: "44444444-4444-4444-8444-444444444444",
     widget_id: widgetId,
@@ -292,8 +295,77 @@ test("POST /api/public/submissions does not fail when async email side effect fa
   }
 });
 
+test("POST /api/public/submissions replays an identical idempotent request", async () => {
+  const originalFailureMode = process.env.GEO_ENRICHMENT_FAILURE_MODE;
+  const originalFind = submissionsRepository.findWidgetById;
+  const originalInsert = submissionsRepository.insertSubmission;
+  let insertCount = 0;
+  const storedResponse = {
+    success: true,
+    data: { submission: { id: "33333333-3333-4333-8333-333333333333", status: "received" } },
+  };
+  const { createRequestHash } = require("../src/utils/idempotency");
+
+  process.env.GEO_ENRICHMENT_FAILURE_MODE = "both";
+  submissionsRepository.findWidgetById = async () => ({
+    id: "11111111-1111-4111-8111-111111111111",
+    tenant_id: "22222222-2222-4222-8222-222222222222",
+    is_active: true,
+  });
+  submissionsRepository.insertSubmission = async () => {
+    insertCount += 1;
+    return storedResponse.data.submission;
+  };
+  submissionsRepository.reserveIdempotencyKey = async ({ key }) => {
+    if (insertCount === 0) return { status: "reserved", record: { key } };
+    return {
+      status: "existing",
+      record: {
+        tenant_id: "22222222-2222-4222-8222-222222222222",
+        scope: "public-submission:11111111-1111-4111-8111-111111111111",
+        request_hash: createRequestHash({
+          widgetId: "11111111-1111-4111-8111-111111111111",
+          payload: { email: "same@example.com" },
+        }),
+        response_status: 201,
+        response_body: storedResponse,
+      },
+    };
+  };
+  submissionsRepository.completeIdempotencyKey = async () => {};
+
+  const { server, port } = await buildServer();
+  try {
+    const createRequest = () => ({
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Idempotency-Key": "same-request",
+        "X-Forwarded-For": "198.51.100.250",
+      },
+      body: JSON.stringify({
+        widgetId: "11111111-1111-4111-8111-111111111111",
+        payload: { email: "same@example.com" },
+      }),
+    });
+    const first = await fetch(`http://127.0.0.1:${port}/api/public/submissions`, createRequest());
+    const second = await fetch(`http://127.0.0.1:${port}/api/public/submissions`, createRequest());
+
+    assert.equal(first.status, 201);
+    assert.equal(second.status, 200);
+    assert.equal(insertCount, 1);
+  } finally {
+    process.env.GEO_ENRICHMENT_FAILURE_MODE = originalFailureMode;
+    submissionsRepository.findWidgetById = originalFind;
+    submissionsRepository.insertSubmission = originalInsert;
+    server.close();
+  }
+});
+
 test.after(() => {
   submissionsRepository.findWidgetById = originalFindWidgetById;
   submissionsRepository.insertSubmission = originalInsertSubmission;
   submissionsRepository.insertSubmissionEvent = originalInsertSubmissionEvent;
+  submissionsRepository.reserveIdempotencyKey = originalReserveIdempotencyKey;
+  submissionsRepository.completeIdempotencyKey = originalCompleteIdempotencyKey;
 });

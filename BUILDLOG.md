@@ -141,6 +141,23 @@ GET /widget-test.html -> 200 text/html; charset=utf-8
 - Confirmed widget IDs are URL-encoded in generated snippets.
 - Documented the snippet contract in `README.md`.
 
+## 2026-09-04 - Phase 4.6 public configuration CORS
+
+- Applied a public CORS policy to `GET /api/public/widgets/:id/config`.
+- Configuration requests now return the requesting origin in `Access-Control-Allow-Origin`.
+- Added a browser-compatible cross-origin config test using the second-origin port.
+
+### Runtime evidence captured
+
+```text
+GET /api/public/widgets/11111111-1111-4111-8111-111111111111/config 200
+Access-Control-Allow-Origin: http://localhost:5500
+✔ GET /api/public/widgets/:id/config returns public config JSON
+ℹ tests 25
+ℹ pass 25
+ℹ fail 0
+```
+
 ## 2026-09-04 - Phase 4.2 tenant context and isolation
 
 - Added tenant context middleware that derives `req.tenant` only from authenticated owner claims.

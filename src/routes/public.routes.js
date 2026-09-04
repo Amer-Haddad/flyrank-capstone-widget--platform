@@ -16,6 +16,13 @@ const submissionsCors = cors({
   credentials: false,
 });
 
+const widgetConfigCors = cors({
+  origin: true,
+  methods: ["GET"],
+  allowedHeaders: ["Accept"],
+  credentials: false,
+});
+
 function getClientIp(req) {
   const forwardedFor = req.headers["x-forwarded-for"];
 
@@ -69,7 +76,7 @@ router.options("/submissions", submissionsCors, (_req, res) => {
   return res.sendStatus(204);
 });
 
-router.get("/widgets/:id/config", publicWidgetsController.getPublicWidgetConfig);
+router.get("/widgets/:id/config", widgetConfigCors, publicWidgetsController.getPublicWidgetConfig);
 
 router.post(
   "/submissions",

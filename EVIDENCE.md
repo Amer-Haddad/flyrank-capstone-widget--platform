@@ -262,6 +262,15 @@ The complete suite now passes with 25 tests and 0 failures.
 ✔ embed snippet generation includes the configured base URL and version
 ```
 
+## Phase 4.6 - Public configuration CORS proof
+
+- `GET /api/public/widgets/:id/config` now applies CORS for browser widget loaders.
+- A request from `http://localhost:5500` returns
+  `Access-Control-Allow-Origin: http://localhost:5500`.
+- The config response remains cacheable with `Cache-Control: public, max-age=60`.
+
+The complete suite passes with 25 tests and 0 failures.
+
 ## Phase 4.4 - Widget management update/delete proof
 
 - `PATCH /api/widgets/:id` updates only the authenticated tenant's widget.

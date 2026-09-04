@@ -55,11 +55,17 @@ test("GET /api/public/widgets/:id/config returns public config JSON", async () =
   const { server, port } = await buildServer();
 
   try {
-    const response = await fetch(`http://127.0.0.1:${port}/api/public/widgets/11111111-1111-4111-8111-111111111111/config`);
+    const response = await fetch(`http://127.0.0.1:${port}/api/public/widgets/11111111-1111-4111-8111-111111111111/config`, {
+      headers: {
+        Origin: "http://localhost:5500",
+        Accept: "application/json",
+      },
+    });
     const body = await response.json();
 
     assert.equal(response.status, 200);
     assert.equal(response.headers.get("cache-control"), "public, max-age=60");
+    assert.equal(response.headers.get("access-control-allow-origin"), "http://localhost:5500");
     assert.equal(body.success, true);
     assert.equal(body.data.title, "Newsletter sign up");
     assert.equal(body.data.fields.length, 2);

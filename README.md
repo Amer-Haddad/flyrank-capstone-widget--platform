@@ -84,8 +84,10 @@ After installing the prerequisites, open PowerShell in the project folder, run
 Start the API with `npm start` in one terminal, then run `npm run
 serve:widget-test` in a second terminal. Open
 `http://localhost:5500/admin.html` to register an owner, create a widget, and
-view the dashboard. Share the public form using
-`http://localhost:5500/public.html?widget=<widget-id>`.
+view the dashboard. In a third terminal, run `npm run serve:public` to serve
+the public visitor form from a second origin, then share it using
+`http://localhost:5501/public.html?widget=<widget-id>`. The public page uses
+the API at `http://localhost:3000` by default.
 
 Development mode:
 
@@ -251,16 +253,18 @@ npm run serve:widget-test
 ```
 
 Open `http://localhost:5500/widget-test.html` for the basic widget delivery
-test. The same static server also provides:
+test. The static server provides:
 
 - `http://localhost:5500/admin.html` - owner registration, widget creation,
   widget listing, and dashboard interface.
-- `http://localhost:5500/public.html?widget=<widgetId>` - public visitor form
-  for submitting data to a widget.
+- `http://localhost:5501/public.html?widget=<widgetId>` - public visitor form
+  for submitting data to a widget from a separate origin.
 
-The admin page calls the authenticated widget and dashboard APIs. The public
-page calls only the public configuration and submission APIs, so a random
-visitor does not need an owner token.
+Run two static servers: keep `npm run serve:widget-test` on port 5500 for the
+admin page, and run `npm run serve:public` on port 5501 for the public page.
+The admin page calls authenticated APIs. The public page calls only public
+configuration and submission APIs, so a random visitor does not need an owner
+token.
 
 ## Reliability and security behavior
 

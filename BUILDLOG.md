@@ -226,6 +226,10 @@ POST /api/public/submissions 200
 - Added shared API CORS handling before authentication middleware.
 - Protected widget and dashboard preflight requests now return `204` instead of `401`.
 
+## 2026-09-04 - Public server shortcut
+
+- Added `npm run serve:public` to start the public form origin directly on port 5501.
+
 ## 2026-09-04 - Admin connection error message
 
 - Confirmed the reported `NetworkError` was caused by the API not running on port 3000.
@@ -234,6 +238,11 @@ POST /api/public/submissions 200
 ## 2026-09-04 - Button interaction states
 
 - Added simple hover, pressed, focus, and disabled button colors to the admin and public interfaces.
+
+## 2026-09-04 - Separate public form origin
+
+- Admin links now open public forms on `http://localhost:5501`.
+- The admin remains on port 5500, allowing public visitor testing from a different origin.
 
 ### Runtime evidence
 

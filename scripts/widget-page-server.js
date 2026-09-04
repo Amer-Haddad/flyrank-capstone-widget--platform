@@ -2,7 +2,9 @@ const http = require("node:http");
 const fs = require("node:fs");
 const path = require("node:path");
 
-const port = Number(process.env.WIDGET_TEST_PORT || 5500);
+const commandPort = process.argv.indexOf("--port");
+const portArgument = commandPort >= 0 ? process.argv[commandPort + 1] : null;
+const port = Number(portArgument || process.env.WIDGET_TEST_PORT || 5500);
 const rootDirectory = path.resolve(__dirname, "..");
 
 const server = http.createServer((req, res) => {

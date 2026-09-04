@@ -320,8 +320,15 @@ The complete suite passes with 36 tests and 0 failures.
 - Admin network failures now explain that the API must be running on port 3000.
 - Protected widget and dashboard browser preflight requests allow the Authorization header before authentication.
 - Interface buttons now have clear hover, pressed, focus, and disabled states.
+- Admin and public form interfaces are documented and served on separate origins (ports 5500 and 5501).
 
-The complete suite passes with 37 tests and 0 failures.
+## Public origin startup proof
+
+- Added `npm run serve:public`, which starts the static server on port 5501 without PowerShell environment-variable syntax.
+- Verified `GET http://localhost:5501/public.html?widget=test-widget` returned `200`.
+- Verified the response contained the public form markup.
+
+The complete suite passes with 38 tests and 0 failures.
 
 ## Phase 4.11 - Documentation and acceptance evidence proof
 

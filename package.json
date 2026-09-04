@@ -7,6 +7,7 @@
     "dev": "nodemon src/server.js",
     "start": "node src/server.js",
     "serve:widget-test": "node scripts/widget-page-server.js",
+    "serve:public": "node scripts/widget-page-server.js --port 5501",
     "migrate": "node src/database/apply-schema.js",
     "test": "node --test"
   },

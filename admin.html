@@ -121,6 +121,9 @@
     tokenInput.value = localStorage.getItem('flyrankToken') || '';
 
     function apiUrl(path) { return apiInput.value.replace(/\/$/, '') + path; }
+    function publicFormUrl(widgetId) {
+      return `http://localhost:5501/public.html?widget=${encodeURIComponent(widgetId)}`;
+    }
     function setStatus(element, message, type) { element.textContent = message; element.className = `status ${type || ''}`; }
     function authHeaders() {
       const token = tokenInput.value.trim();
@@ -143,7 +146,7 @@
       if (!widgets.length) { widgetsOutput.textContent = 'No widgets found.'; return; }
       widgetsOutput.innerHTML = `<table><thead><tr><th>Title</th><th>Type</th><th>Version</th><th>Public form</th></tr></thead><tbody>${widgets.map((widget) => `
         <tr><td>${escapeHtml(widget.title)}</td><td>${escapeHtml(widget.type)}</td><td>${widget.version}</td>
-        <td><a href="public.html?api=${encodeURIComponent(apiInput.value)}&widget=${encodeURIComponent(widget.id)}" target="_blank">Open form</a><br><code>${escapeHtml(widget.embedSnippet)}</code></td></tr>`).join('')}</tbody></table>`;
+        <td><a href="${publicFormUrl(widget.id)}" target="_blank">Open form</a><br><code>${escapeHtml(widget.embedSnippet)}</code></td></tr>`).join('')}</tbody></table>`;
     }
     function escapeHtml(value) { return String(value).replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[char])); }
     async function loadWidgets() {
@@ -201,7 +204,7 @@
     document.getElementById('refresh-dashboard').addEventListener('click', loadDashboard);
     document.getElementById('open-public').addEventListener('click', () => {
       const widget = state.widgets[0];
-      if (widget) window.open(`public.html?api=${encodeURIComponent(apiInput.value)}&widget=${encodeURIComponent(widget.id)}`, '_blank');
+      if (widget) window.open(publicFormUrl(widget.id), '_blank');
       else setStatus(widgetStatus, 'Load or create a widget first.', 'error');
     });
   </script>

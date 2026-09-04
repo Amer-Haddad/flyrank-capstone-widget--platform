@@ -169,3 +169,26 @@ Widget test page is running at http://localhost:5500/widget-test.html
 The complete test suite passed with 9 tests and 0 failures. The second-origin
 page server returned `200 text/html; charset=utf-8` and contained the
 cross-origin widget script reference.
+
+## Phase 3.4 - Evidence and documentation completion
+
+### Requirement checklist
+
+| Requirement | Evidence |
+| --- | --- |
+| Valid submission | `test/public-submissions.test.js` verifies `201 Created`. |
+| Malformed payload | The same test verifies `400 VALIDATION_ERROR`. |
+| Oversized payload | Express JSON and URL-encoded parsers enforce the `64kb` boundary; the error handler maps oversized bodies to `413 PAYLOAD_TOO_LARGE`. |
+| Rate-limit burst | The test sends 21 requests and verifies at least one `429` response. |
+| Provider A/B fallback | Geo tests verify the secondary provider is used after primary failure. |
+| Both providers unavailable | Geo tests verify `null` geo while the request path remains usable. |
+| Side-effect failure | The email failure test verifies submission success and event recording despite simulated outage. |
+| Honeypot blocking | The spam test verifies hidden `website` data returns `400 VALIDATION_ERROR`. |
+| Widget delivery | Widget tests verify versioned script and config cache headers. |
+| Second-origin page | `npm run serve:widget-test` serves the HTML page on port 5500 while the API runs on port 3000. |
+
+### Documentation and manifest
+
+- [README.md](C:/Users/USER/Desktop/flyrank-capstone-widget--platform/README.md) now includes the architecture diagram, setup/migration commands, implemented endpoint table, limitations, and acceptance commands.
+- [capstone.yaml](C:/Users/USER/Desktop/flyrank-capstone-widget--platform/capstone.yaml) now lists executable test/page probes and implemented endpoint probes.
+- `npm test` completed with 10 passing tests and 0 failures, including explicit oversized-body `413 PAYLOAD_TOO_LARGE` coverage.

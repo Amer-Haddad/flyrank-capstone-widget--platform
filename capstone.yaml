@@ -1,8 +1,25 @@
 run: npm run dev
-seed: "TBD in Phase 1.2"
+seed: "No seed command; use npm run migrate to apply the schema"
 test: npm test
 base_url: http://localhost:3000
+probes:
+  - command: npm test
+    description: Run the complete automated acceptance suite
+  - command: npm run serve:widget-test
+    description: Serve the second-origin widget test page on port 5500
 endpoints:
   - method: GET
     path: /api/health
     description: Service health baseline endpoint
+  - method: GET
+    path: /widget.js?id=11111111-1111-4111-8111-111111111111&v=7
+    description: Versioned public widget bundle with immutable caching
+  - method: GET
+    path: /api/public/widgets/11111111-1111-4111-8111-111111111111/config
+    description: Public widget configuration with short-lived caching
+  - method: OPTIONS
+    path: /api/public/submissions
+    description: Public submission CORS preflight
+  - method: POST
+    path: /api/public/submissions
+    description: Validated and rate-limited public submission endpoint

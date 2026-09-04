@@ -38,6 +38,21 @@ src/
   jobs/
 ```
 
+## Architecture
+
+```text
+Browser / embedded widget
+        |
+        v
+Express routes + middleware (CORS, validation, rate limits, errors)
+        |
+        v
+Controllers -> Services -> Repositories -> PostgreSQL
+                         |
+                         +-> geo provider fallback
+                         +-> asynchronous email side effect
+```
+
 ## Run
 
 ```bash
@@ -51,6 +66,10 @@ npm run dev
 docker compose up -d postgres
 npm run migrate
 ```
+
+The migration command applies `src/database/schema.sql`. There is no separate
+seed command in the current implementation; tests provide deterministic
+repository fixtures.
 
 Health endpoint:
 
@@ -74,6 +93,36 @@ and renders the submission form.
 ## Design and API contract
 
 Phase 1 design, API contracts, response format, status-code matrix, and explicit non-goal are documented in [DESIGN.md](C:/Users/USER/Desktop/flyrank-capstone-widget--platform/DESIGN.md).
+
+## Implemented endpoints
+
+| Method | Path | Purpose |
+| --- | --- | --- |
+| `GET` | `/api/health` | Runtime health check |
+| `GET` | `/widget.js?id=<widgetId>&v=<version>` | Versioned embeddable widget bundle |
+| `GET` | `/api/public/widgets/:id/config` | Public widget configuration |
+| `OPTIONS` | `/api/public/submissions` | CORS preflight |
+| `POST` | `/api/public/submissions` | Validated, rate-limited lead submission |
+
+## Limitations
+
+- Owner authentication, widget CRUD, and dashboard analytics are documented
+  contracts but are not implemented in this milestone.
+- The widget client is intentionally minimal and supports the configured
+  text/email fields without an advanced visual builder.
+- Geo enrichment and email notification are best-effort dependencies; the
+  submission record remains the source of truth when they fail.
+
+## Acceptance verification
+
+```bash
+npm test
+npm run serve:widget-test
+```
+
+With the application running on port 3000, open
+`http://localhost:5500/widget-test.html` to verify cross-origin widget
+delivery and form submission.
 
 ## Phase 1.4 Gate output - One-page design
 

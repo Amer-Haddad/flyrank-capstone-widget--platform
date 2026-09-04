@@ -106,6 +106,13 @@ GET /widget-test.html -> 200 text/html; charset=utf-8
 ℹ fail 0
 ```
 
+## 2026-09-04 - Phase 3.4 evidence and documentation completion
+
+- Finalized `README.md` with the layered architecture diagram, setup/migration instructions, implemented endpoint table, limitations, and acceptance commands.
+- Finalized `capstone.yaml` with executable test and second-origin page probes plus the implemented public endpoint probes.
+- Completed the `EVIDENCE.md` requirement checklist for submission success, malformed/oversized payloads, abuse protection, geo fallback, side-effect failure, honeypot blocking, widget delivery, and second-origin testing.
+- Verified the complete automated suite: 10 tests passed and 0 failed, including explicit `413 PAYLOAD_TOO_LARGE` coverage.
+
 ### Runtime evidence captured
 
 ```text

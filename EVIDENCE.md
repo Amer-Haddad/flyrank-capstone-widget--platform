@@ -287,6 +287,22 @@ The complete suite passes with 25 tests and 0 failures.
 
 The complete suite passes with 26 tests and 0 failures.
 
+## Phase 4.8 - Background job wiring proof
+
+- `src/jobs/index.js` now registers named handlers and dispatches them asynchronously.
+- The submission side-effect service registers and enqueues the `submission-side-effects` job.
+- The public submission response is returned before the email job finishes.
+- Existing retry and `submission_events` failure recording remain inside the job processor.
+
+### Automated proof
+
+```text
+✔ registered jobs execute asynchronously after enqueue
+✔ POST /api/public/submissions does not fail when async email side effect fails
+```
+
+The complete suite passes with 27 tests and 0 failures.
+
 ## Phase 4.4 - Widget management update/delete proof
 
 - `PATCH /api/widgets/:id` updates only the authenticated tenant's widget.

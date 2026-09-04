@@ -1,5 +1,8 @@
 const nodemailer = require("nodemailer");
 const submissionsRepository = require("../repositories/public-submissions.repository");
+const { enqueueJob, registerJob } = require("../jobs");
+
+const SUBMISSION_SIDE_EFFECTS_JOB = "submission-side-effects";
 
 const DEFAULT_EMAIL_RECIPIENT = "your-recipient@example.com";
 
@@ -147,12 +150,10 @@ async function processSubmissionSideEffects({ submissionId, widgetId, tenantId, 
 }
 
 function enqueueSubmissionSideEffects(submission) {
-  setImmediate(() => {
-    processSubmissionSideEffects(submission).catch((error) => {
-      console.error("[email] async side effect processing failed:", error.message);
-    });
-  });
+  enqueueJob(SUBMISSION_SIDE_EFFECTS_JOB, submission);
 }
+
+registerJob(SUBMISSION_SIDE_EFFECTS_JOB, processSubmissionSideEffects);
 
 module.exports = {
   sendSubmissionEmail,

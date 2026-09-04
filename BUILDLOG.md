@@ -178,6 +178,24 @@ POST /api/public/submissions 200
 ℹ fail 0
 ```
 
+## 2026-09-04 - Phase 4.8 background job wiring
+
+- Replaced the placeholder job registration with an explicit in-process job registry and dispatcher.
+- Registered the submission side-effect processor as the `submission-side-effects` background job.
+- Public submission persistence remains synchronous, while email processing is dispatched with `setImmediate`.
+- Job failures are surfaced through job-scoped error logs and do not reject the submission request.
+- Added a direct asynchronous job execution test.
+
+### Runtime evidence captured
+
+```text
+✔ registered jobs execute asynchronously after enqueue
+✔ POST /api/public/submissions does not fail when async email side effect fails
+ℹ tests 27
+ℹ pass 27
+ℹ fail 0
+```
+
 ## 2026-09-04 - Phase 4.2 tenant context and isolation
 
 - Added tenant context middleware that derives `req.tenant` only from authenticated owner claims.

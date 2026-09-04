@@ -102,10 +102,83 @@ async function findWidgetConfigForTenant(widgetId, tenantId) {
   return { ...widget, fields: fields.rows };
 }
 
+async function updateWidgetForTenant(widgetId, tenantId, input) {
+  const client = await pool.connect();
+
+  try {
+    await client.query("BEGIN");
+    const updates = [];
+    const values = [widgetId, tenantId];
+    const columnMap = {
+      type: "type",
+      title: "title",
+      description: "description",
+      buttonText: "button_text",
+      displayOptions: "display_options",
+    };
+
+    Object.entries(columnMap).forEach(([inputKey, column]) => {
+      if (input[inputKey] !== undefined) {
+        values.push(column === "display_options" ? JSON.stringify(input[inputKey]) : input[inputKey]);
+        updates.push(`${column} = $${values.length}${column === "display_options" ? "::jsonb" : ""}`);
+      }
+    });
+
+    const hasFields = input.fields !== undefined;
+    if (updates.length > 0 || hasFields) {
+      updates.push("version = version + 1");
+      updates.push("updated_at = NOW()");
+      const widgetResult = await client.query(
+        `UPDATE widgets SET ${updates.join(", ")}
+         WHERE id = $1 AND tenant_id = $2
+         RETURNING id, tenant_id, type, title, description, button_text, version, is_active, display_options`,
+        values,
+      );
+
+      if (widgetResult.rowCount === 0) {
+        await client.query("ROLLBACK");
+        return null;
+      }
+
+      if (hasFields) {
+        await client.query("DELETE FROM widget_fields WHERE widget_id = $1 AND tenant_id = $2", [widgetId, tenantId]);
+        for (const [sortOrder, field] of input.fields.entries()) {
+          await client.query(
+            `INSERT INTO widget_fields (widget_id, tenant_id, field_key, label, field_type, is_required, sort_order, validation_rules)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8::jsonb)`,
+            [widgetId, tenantId, field.key, field.label, field.type, Boolean(field.required), sortOrder, JSON.stringify(field.validationRules || {})],
+          );
+        }
+      }
+
+      await client.query("COMMIT");
+      return findWidgetConfigForTenant(widgetId, tenantId);
+    }
+
+    await client.query("ROLLBACK");
+    return findWidgetConfigForTenant(widgetId, tenantId);
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
+async function deleteWidgetForTenant(widgetId, tenantId) {
+  const result = await pool.query(
+    "DELETE FROM widgets WHERE id = $1 AND tenant_id = $2 RETURNING id",
+    [widgetId, tenantId],
+  );
+  return result.rowCount > 0;
+}
+
 module.exports = {
   findPublicWidgetConfig,
   findWidgetByIdForTenant,
   createWidget,
   listWidgetsForTenant,
   findWidgetConfigForTenant,
+  updateWidgetForTenant,
+  deleteWidgetForTenant,
 };

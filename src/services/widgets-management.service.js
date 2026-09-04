@@ -33,8 +33,21 @@ async function getWidget(tenantId, widgetId) {
   return presentWidget(widget);
 }
 
+async function updateWidget(tenantId, widgetId, input) {
+  const widget = await widgetsRepository.updateWidgetForTenant(widgetId, tenantId, input);
+  if (!widget) throw new HttpError(404, "WIDGET_NOT_FOUND", "Widget does not exist.");
+  return presentWidget(widget);
+}
+
+async function deleteWidget(tenantId, widgetId) {
+  const deleted = await widgetsRepository.deleteWidgetForTenant(widgetId, tenantId);
+  if (!deleted) throw new HttpError(404, "WIDGET_NOT_FOUND", "Widget does not exist.");
+}
+
 module.exports = {
   createWidget,
   listWidgets,
   getWidget,
+  updateWidget,
+  deleteWidget,
 };

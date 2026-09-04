@@ -246,4 +246,12 @@ cross-origin widget script reference.
 ✔ widget creation rejects invalid field definitions
 ```
 
-The complete suite now passes with 22 tests and 0 failures.
+The complete suite now passes with 24 tests and 0 failures.
+
+## Phase 4.4 - Widget management update/delete proof
+
+- `PATCH /api/widgets/:id` updates only the authenticated tenant's widget.
+- Delivery-affecting updates increment `version`.
+- Field replacements and widget updates execute transactionally.
+- `DELETE /api/widgets/:id` deletes only when both widget ID and tenant ID match.
+- Successful deletion returns `204 No Content`; missing or cross-tenant resources return `404 WIDGET_NOT_FOUND`.

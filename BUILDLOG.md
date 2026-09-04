@@ -149,6 +149,21 @@ GET /widget-test.html -> 200 text/html; charset=utf-8
 - Added embed snippet generation to widget responses.
 - Added tests for create/read/list success, invalid fields, and unauthenticated access.
 
+## 2026-09-04 - Phase 4.4 widget management update/delete
+
+- Added tenant-scoped `PATCH /api/widgets/:id` and `DELETE /api/widgets/:id`.
+- Configuration updates increment the widget version to invalidate versioned delivery URLs.
+- Field updates replace the tenant-scoped field set transactionally with the widget update.
+- Missing or cross-tenant resources return `404 WIDGET_NOT_FOUND`.
+- Added update and delete endpoint tests.
+
+### Runtime evidence captured
+
+```text
+✔ widget update returns the new version and remains tenant-scoped
+✔ widget delete returns 204 and requires tenant-scoped deletion
+```
+
 ### Runtime evidence captured
 
 ```text
@@ -156,7 +171,7 @@ GET /widget-test.html -> 200 text/html; charset=utf-8
 ✔ widget list and read routes use the authenticated tenant
 ✔ widget management routes reject unauthenticated requests
 ✔ widget creation rejects invalid field definitions
-ℹ tests 22
-ℹ pass 22
+ℹ tests 24
+ℹ pass 24
 ℹ fail 0
 ```

@@ -102,6 +102,61 @@ test("widget creation rejects invalid field definitions", async () => {
       headers: { Authorization: `Bearer ${token()}`, "Content-Type": "application/json" },
       body: JSON.stringify({ type: "signup", title: "Invalid", fields: [{ key: "email", label: "Email", type: "number" }] }),
     });
+
+    test("widget update returns the new version and remains tenant-scoped", async () => {
+      const originalUpdate = widgetsRepository.updateWidgetForTenant;
+      widgetsRepository.updateWidgetForTenant = async (id, tenantId, input) => ({
+        id,
+        tenant_id: tenantId,
+        type: "signup",
+        title: input.title,
+        description: null,
+        button_text: "Submit",
+        version: 2,
+        is_active: true,
+        display_options: {},
+        fields: [],
+      });
+      const { server, port } = await buildServer();
+
+      try {
+        const response = await fetch(`http://127.0.0.1:${port}/api/widgets/11111111-1111-4111-8111-111111111111`, {
+          method: "PATCH",
+          headers: { Authorization: `Bearer ${token()}`, "Content-Type": "application/json" },
+          body: JSON.stringify({ title: "Updated newsletter" }),
+        });
+        const body = await response.json();
+        assert.equal(response.status, 200);
+        assert.equal(body.data.title, "Updated newsletter");
+        assert.equal(body.data.version, 2);
+        assert.equal(body.data.tenantId, "tenant-a");
+      } finally {
+        widgetsRepository.updateWidgetForTenant = originalUpdate;
+        server.close();
+      }
+    });
+
+    test("widget delete returns 204 and requires tenant-scoped deletion", async () => {
+      const originalDelete = widgetsRepository.deleteWidgetForTenant;
+      let receivedTenantId;
+      widgetsRepository.deleteWidgetForTenant = async (_id, tenantId) => {
+        receivedTenantId = tenantId;
+        return true;
+      };
+      const { server, port } = await buildServer();
+
+      try {
+        const response = await fetch(`http://127.0.0.1:${port}/api/widgets/11111111-1111-4111-8111-111111111111`, {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${token()}` },
+        });
+        assert.equal(response.status, 204);
+        assert.equal(receivedTenantId, "tenant-a");
+      } finally {
+        widgetsRepository.deleteWidgetForTenant = originalDelete;
+        server.close();
+      }
+    });
     assert.equal(response.status, 400);
   } finally {
     server.close();

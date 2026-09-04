@@ -40,11 +40,38 @@ const createWidgetValidator = [
   widgetFieldsValidator,
 ];
 
+const updateWidgetValidator = [
+  body("type").optional().isIn(widgetTypes).withMessage("type must be signup, contact, or cta."),
+  body("title").optional().isString().trim().isLength({ min: 1, max: 160 }),
+  body("description").optional({ nullable: true }).isString().isLength({ max: 1000 }),
+  body("buttonText").optional().isString().trim().isLength({ min: 1, max: 80 }),
+  body("displayOptions").optional().isObject().withMessage("displayOptions must be an object."),
+  body("fields").optional(),
+  body("fields").if(body("fields").exists()).isArray({ min: 1, max: 20 }).custom((fields) => {
+    const keys = new Set();
+    fields.forEach((field) => {
+      if (!field || typeof field !== "object" || Array.isArray(field)
+        || typeof field.key !== "string"
+        || !/^[a-zA-Z][a-zA-Z0-9_]{0,63}$/.test(field.key)
+        || keys.has(field.key)
+        || typeof field.label !== "string"
+        || field.label.trim().length === 0
+        || field.label.length > 120
+        || !fieldTypes.includes(field.type)) {
+        throw new Error("Invalid widget field definition.");
+      }
+      keys.add(field.key);
+    });
+    return true;
+  }),
+];
+
 const widgetIdValidator = [
   param("id").isUUID().withMessage("id must be a valid widget ID."),
 ];
 
 module.exports = {
   createWidgetValidator,
+  updateWidgetValidator,
   widgetIdValidator,
 };

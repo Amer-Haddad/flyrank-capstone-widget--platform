@@ -27,8 +27,28 @@ async function getWidget(req, res, next) {
   }
 }
 
+async function updateWidget(req, res, next) {
+  try {
+    const widget = await widgetsManagementService.updateWidget(req.tenant.id, req.params.id, req.body);
+    return res.status(200).json({ success: true, data: widget });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+async function deleteWidget(req, res, next) {
+  try {
+    await widgetsManagementService.deleteWidget(req.tenant.id, req.params.id);
+    return res.sendStatus(204);
+  } catch (error) {
+    return next(error);
+  }
+}
+
 module.exports = {
   createWidget,
   listWidgets,
   getWidget,
+  updateWidget,
+  deleteWidget,
 };

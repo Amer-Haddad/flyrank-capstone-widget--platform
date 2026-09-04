@@ -192,3 +192,21 @@ cross-origin widget script reference.
 - [README.md](C:/Users/USER/Desktop/flyrank-capstone-widget--platform/README.md) now includes the architecture diagram, setup/migration commands, implemented endpoint table, limitations, and acceptance commands.
 - [capstone.yaml](C:/Users/USER/Desktop/flyrank-capstone-widget--platform/capstone.yaml) now lists executable test/page probes and implemented endpoint probes.
 - `npm test` completed with 10 passing tests and 0 failures, including explicit oversized-body `413 PAYLOAD_TOO_LARGE` coverage.
+
+## Phase 4.1 - Authentication foundation proof
+
+- `JWT_SECRET` is required and must contain at least 32 characters.
+- Optional `JWT_ISSUER` is validated when configured.
+- Protected routes require an `Authorization: Bearer <token>` header.
+- Tokens must use `HS256` and contain `sub` (or `userId`) plus `tenantId`.
+- Validated context is exposed as `req.owner` with `userId`, `tenantId`, and `role`.
+- Missing, malformed, invalid, and incomplete tokens return `401 UNAUTHORIZED`.
+
+### Automated proof
+
+```text
+✔ protected routes reject requests without credentials
+✔ protected routes reject malformed and invalid bearer tokens
+✔ protected routes accept a valid owner token and expose tenant context
+✔ protected routes reject tokens missing tenant claims
+```

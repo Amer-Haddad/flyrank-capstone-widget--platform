@@ -6,7 +6,7 @@ probes:
   - command: npm test
     description: Run the complete automated acceptance suite
   - command: npm run serve:widget-test
-    description: Serve the second-origin widget test page on port 5500
+    description: Serve the second-origin widget test page on port 5501
 endpoints:
   - method: GET
     path: /api/health

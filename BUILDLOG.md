@@ -113,14 +113,23 @@ GET /widget-test.html -> 200 text/html; charset=utf-8
 - Completed the `EVIDENCE.md` requirement checklist for submission success, malformed/oversized payloads, abuse protection, geo fallback, side-effect failure, honeypot blocking, widget delivery, and second-origin testing.
 - Verified the complete automated suite: 10 tests passed and 0 failed, including explicit `413 PAYLOAD_TOO_LARGE` coverage.
 
+## 2026-09-04 - Phase 4.1 authentication foundation
+
+- Added JWT configuration validation requiring a 32-character `JWT_SECRET`.
+- Added optional issuer validation through `JWT_ISSUER`.
+- Added bearer-token authentication middleware for protected owner routes.
+- Restricted accepted tokens to the `HS256` algorithm.
+- Required `sub`/`userId` and `tenantId` claims and exposed validated owner context as `req.owner`.
+- Added tests for missing credentials, malformed/invalid tokens, valid owner tokens, and missing tenant claims.
+
 ### Runtime evidence captured
 
 ```text
-GET /widget.js?id=11111111-1111-4111-8111-111111111111&v=7 200 1.563 ms - 4407
-✔ GET /widget.js returns a versioned widget script with long cache headers
-GET /api/public/widgets/11111111-1111-4111-8111-111111111111/config 200 1.036 ms - 511
-✔ GET /api/public/widgets/:id/config returns public config JSON
-ℹ tests 2
-ℹ pass 2
+✔ protected routes reject requests without credentials
+✔ protected routes reject malformed and invalid bearer tokens
+✔ protected routes accept a valid owner token and expose tenant context
+✔ protected routes reject tokens missing tenant claims
+ℹ tests 14
+ℹ pass 14
 ℹ fail 0
 ```

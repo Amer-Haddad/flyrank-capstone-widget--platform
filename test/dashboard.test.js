@@ -79,3 +79,82 @@ test("dashboard submissions rejects invalid pagination and dates", async () => {
     server.close();
   }
 });
+
+test("dashboard analytics returns tenant-scoped overview, widget, and geo data", async () => {
+  const originals = {
+    overview: submissionsRepository.getDashboardOverview,
+    widgets: submissionsRepository.getDashboardWidgetStats,
+    geo: submissionsRepository.getDashboardGeoStats,
+  };
+  const received = [];
+  submissionsRepository.getDashboardOverview = async (filters) => {
+    received.push(["overview", filters]);
+    return { total: 2, byDay: [{ date: "2026-09-04", count: 2 }] };
+  };
+  submissionsRepository.getDashboardWidgetStats = async (filters) => {
+    received.push(["widgets", filters]);
+    return [{ widgetId: "11111111-1111-4111-8111-111111111111", count: 2 }];
+  };
+  submissionsRepository.getDashboardGeoStats = async (filters) => {
+    received.push(["geo", filters]);
+    return [{ country: "US", region: "CA", city: "San Francisco", count: 2 }];
+  };
+  const { server, port } = await buildServer();
+
+  try {
+    const headers = { Authorization: `Bearer ${token("tenant-analytics")}` };
+    const [overviewResponse, widgetsResponse, geoResponse] = await Promise.all([
+      fetch(`http://127.0.0.1:${port}/api/dashboard/stats/overview?from=2026-09-01`, { headers }),
+      fetch(`http://127.0.0.1:${port}/api/dashboard/stats/widgets?to=2026-09-05`, { headers }),
+      fetch(`http://127.0.0.1:${port}/api/dashboard/stats/geo`, { headers }),
+    ]);
+
+    assert.equal(overviewResponse.status, 200);
+    assert.deepEqual((await overviewResponse.json()).data, {
+      total: 2,
+      byDay: [{ date: "2026-09-04", count: 2 }],
+    });
+    assert.deepEqual((await widgetsResponse.json()).data, [
+      { widgetId: "11111111-1111-4111-8111-111111111111", count: 2 },
+    ]);
+    assert.deepEqual((await geoResponse.json()).data, [
+      { country: "US", region: "CA", city: "San Francisco", count: 2 },
+    ]);
+    assert.equal(received.length, 3);
+    for (const [, filters] of received) {
+      assert.equal(filters.tenantId, "tenant-analytics");
+    }
+  } finally {
+    submissionsRepository.getDashboardOverview = originals.overview;
+    submissionsRepository.getDashboardWidgetStats = originals.widgets;
+    submissionsRepository.getDashboardGeoStats = originals.geo;
+    server.close();
+  }
+});
+
+test("dashboard analytics requires authentication", async () => {
+  const { server, port } = await buildServer();
+  try {
+    for (const path of ["overview", "widgets", "geo"]) {
+      const response = await fetch(`http://127.0.0.1:${port}/api/dashboard/stats/${path}`);
+      assert.equal(response.status, 401);
+    }
+  } finally {
+    server.close();
+  }
+});
+
+test("dashboard analytics rejects invalid filters", async () => {
+  const { server, port } = await buildServer();
+  try {
+    const response = await fetch(
+      `http://127.0.0.1:${port}/api/dashboard/stats/geo?widgetId=not-a-uuid&from=2026-09-05&to=2026-09-01`,
+      { headers: { Authorization: `Bearer ${token()}` } },
+    );
+    const body = await response.json();
+    assert.equal(response.status, 400);
+    assert.equal(body.error.code, "INVALID_QUERY");
+  } finally {
+    server.close();
+  }
+});

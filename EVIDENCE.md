@@ -301,7 +301,7 @@ The complete suite passes with 26 tests and 0 failures.
 ✔ POST /api/public/submissions does not fail when async email side effect fails
 ```
 
-The complete suite passes with 30 tests and 0 failures.
+The complete suite passes with 33 tests and 0 failures.
 
 ## Phase 4.9 - Dashboard submissions API proof
 
@@ -318,6 +318,24 @@ The complete suite passes with 30 tests and 0 failures.
 ✔ dashboard submissions rejects unauthenticated requests
 ✔ dashboard submissions rejects invalid pagination and dates
 ```
+
+## Phase 4.10 - Dashboard analytics APIs proof
+
+- Added `GET /api/dashboard/stats/overview` with total and daily submission counts.
+- Added `GET /api/dashboard/stats/widgets` with per-widget totals.
+- Added `GET /api/dashboard/stats/geo` with country, region, and city totals.
+- All analytics queries require authentication and filter by the authenticated tenant.
+- Analytics support optional widget and date-range filters and cap grouped results at 100 rows.
+
+### Automated proof
+
+```text
+✔ dashboard analytics returns tenant-scoped overview, widget, and geo data
+✔ dashboard analytics requires authentication
+✔ dashboard analytics rejects invalid filters
+```
+
+The complete suite passes with 33 tests and 0 failures.
 
 ## Phase 4.4 - Widget management update/delete proof
 

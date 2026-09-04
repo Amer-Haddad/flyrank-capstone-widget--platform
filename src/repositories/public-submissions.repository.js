@@ -137,6 +137,78 @@ async function findDashboardSubmissions({ tenantId, widgetId, from, to, limit, o
   };
 }
 
+function analyticsFilter({ tenantId, widgetId, from, to }) {
+  const values = [tenantId];
+  const filters = ["tenant_id = $1"];
+
+  if (widgetId) {
+    values.push(widgetId);
+    filters.push(`widget_id = $${values.length}`);
+  }
+  if (from) {
+    values.push(from);
+    filters.push(`created_at >= $${values.length}`);
+  }
+  if (to) {
+    values.push(to);
+    filters.push(`created_at <= $${values.length}`);
+  }
+
+  return { values, where: filters.join(" AND ") };
+}
+
+async function getDashboardOverview({ tenantId, widgetId, from, to }) {
+  const filter = analyticsFilter({ tenantId, widgetId, from, to });
+  const [totalResult, dailyResult] = await Promise.all([
+    pool.query(`SELECT COUNT(*)::int AS total FROM submissions WHERE ${filter.where}`, filter.values),
+    pool.query(
+      `SELECT DATE(created_at) AS date, COUNT(*)::int AS count
+       FROM submissions
+       WHERE ${filter.where}
+       GROUP BY DATE(created_at)
+       ORDER BY date ASC`,
+      filter.values,
+    ),
+  ]);
+
+  return {
+    total: totalResult.rows[0].total,
+    byDay: dailyResult.rows,
+  };
+}
+
+async function getDashboardWidgetStats({ tenantId, from, to }) {
+  const filter = analyticsFilter({ tenantId, from, to });
+  const result = await pool.query(
+    `SELECT widget_id AS "widgetId", COUNT(*)::int AS count
+     FROM submissions
+     WHERE ${filter.where}
+     GROUP BY widget_id
+     ORDER BY count DESC, widget_id ASC
+     LIMIT 100`,
+    filter.values,
+  );
+  return result.rows;
+}
+
+async function getDashboardGeoStats({ tenantId, widgetId, from, to }) {
+  const filter = analyticsFilter({ tenantId, widgetId, from, to });
+  const result = await pool.query(
+    `SELECT
+       COALESCE(geo->>'country', 'Unknown') AS country,
+       COALESCE(geo->>'region', 'Unknown') AS region,
+       COALESCE(geo->>'city', 'Unknown') AS city,
+       COUNT(*)::int AS count
+     FROM submissions
+     WHERE ${filter.where}
+     GROUP BY country, region, city
+     ORDER BY count DESC, country ASC, region ASC, city ASC
+     LIMIT 100`,
+    filter.values,
+  );
+  return result.rows;
+}
+
 module.exports = {
   findWidgetById,
   reserveIdempotencyKey,
@@ -145,4 +217,7 @@ module.exports = {
   insertSubmissionEvent,
   findSubmissionsByTenant,
   findDashboardSubmissions,
+  getDashboardOverview,
+  getDashboardWidgetStats,
+  getDashboardGeoStats,
 };

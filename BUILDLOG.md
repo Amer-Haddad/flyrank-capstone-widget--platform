@@ -194,13 +194,21 @@ POST /api/public/submissions 200
 - Added validation for page, page size, widget UUID, and ISO date filters.
 - Added tests for tenant context, pagination, unauthorized access, and invalid queries.
 
+## 2026-09-04 - Phase 4.10 dashboard analytics APIs
+
+- Added authenticated tenant-scoped overview, widget, and geo aggregation endpoints.
+- Added optional `widgetId`, `from`, and `to` filters to analytics queries.
+- Added daily submission counts, per-widget totals, and normalized geo breakdowns.
+- Capped widget and geo result sets at 100 rows and added validation for analytics filters.
+- Added tests for analytics responses, tenant context, authentication, and invalid filters.
+
 ### Runtime evidence captured
 
 ```text
 ✔ registered jobs execute asynchronously after enqueue
 ✔ POST /api/public/submissions does not fail when async email side effect fails
-ℹ tests 27
-ℹ pass 27
+ℹ tests 33
+ℹ pass 33
 ℹ fail 0
 ```
 

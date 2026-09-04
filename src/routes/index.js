@@ -20,5 +20,8 @@ router.get("/widgets/:id", widgetIdValidator, validateRequest, widgetsController
 router.patch("/widgets/:id", widgetIdValidator, updateWidgetValidator, validateRequest, widgetsController.updateWidget);
 router.delete("/widgets/:id", widgetIdValidator, validateRequest, widgetsController.deleteWidget);
 router.get("/dashboard/submissions", authenticateOwner, requireTenantContext, dashboardController.listSubmissions);
+router.get("/dashboard/stats/overview", authenticateOwner, requireTenantContext, dashboardController.getOverview);
+router.get("/dashboard/stats/widgets", authenticateOwner, requireTenantContext, dashboardController.getWidgetStats);
+router.get("/dashboard/stats/geo", authenticateOwner, requireTenantContext, dashboardController.getGeoStats);
 
 module.exports = router;

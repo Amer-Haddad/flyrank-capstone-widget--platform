@@ -71,6 +71,21 @@ The migration command applies `src/database/schema.sql`. There is no separate
 seed command in the current implementation; tests provide deterministic
 repository fixtures.
 
+## Owner authentication
+
+Protected widget and dashboard routes require an `HS256` JWT containing `sub`
+(or `userId`) and `tenantId` claims. Configure `JWT_SECRET` with at least 32
+characters and optionally set `JWT_ISSUER`. For local testing, create a token
+with the installed `jsonwebtoken` package:
+
+```bash
+node -e "console.log(require('jsonwebtoken').sign({sub:'demo-user',tenantId:'demo-tenant',role:'owner'}, process.env.JWT_SECRET, {algorithm:'HS256', issuer:process.env.JWT_ISSUER}))"
+```
+
+Use the resulting value as `Authorization: Bearer <token>`. The application
+does not include a user-registration or seed endpoint; create database fixtures
+through the migration/schema process or an external application workflow.
+
 Health endpoint:
 
 ```bash
@@ -134,6 +149,15 @@ npm run serve:widget-test
 With the application running on port 3000, open
 `http://localhost:5500/widget-test.html` to verify cross-origin widget
 delivery and form submission.
+
+Authenticated dashboard example:
+
+```bash
+curl -H "Authorization: Bearer <token>" \
+  "http://localhost:3000/api/dashboard/submissions?page=1&pageSize=25"
+curl -H "Authorization: Bearer <token>" \
+  "http://localhost:3000/api/dashboard/stats/overview"
+```
 
 Widget management responses include an `embedSnippet` value in this format:
 

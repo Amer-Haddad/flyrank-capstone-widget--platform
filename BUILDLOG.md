@@ -202,6 +202,14 @@ POST /api/public/submissions 200
 - Capped widget and geo result sets at 100 rows and added validation for analytics filters.
 - Added tests for analytics responses, tenant context, authentication, and invalid filters.
 
+## 2026-09-04 - Phase 4.11 documentation and acceptance evidence
+
+- Updated `README.md` with JWT setup, protected-route examples, dashboard examples, and migration/seed limitations.
+- Updated `capstone.yaml` with widget CRUD and dashboard endpoint probes and corrected the widget test port to 5500.
+- Marked authentication, tenant isolation, idempotency, dashboard visibility, and analytics evidence as complete.
+- AI assistance: Copilot SDK in VS Code was used for implementation, documentation, and test review.
+- Estimated usage cost: not metered by the repository or local test tooling; no cost figure is available from this workspace.
+
 ### Runtime evidence captured
 
 ```text

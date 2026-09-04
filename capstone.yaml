@@ -6,7 +6,7 @@ probes:
   - command: npm test
     description: Run the complete automated acceptance suite
   - command: npm run serve:widget-test
-    description: Serve the second-origin widget test page on port 5501
+    description: Serve the second-origin widget test page on port 5500
 endpoints:
   - method: GET
     path: /api/health
@@ -23,3 +23,27 @@ endpoints:
   - method: POST
     path: /api/public/submissions
     description: Validated and rate-limited public submission endpoint
+  - method: POST
+    path: /api/widgets
+    description: Authenticated tenant-scoped widget creation
+  - method: GET
+    path: /api/widgets
+    description: Authenticated tenant-scoped widget listing
+  - method: PATCH
+    path: /api/widgets/11111111-1111-4111-8111-111111111111
+    description: Authenticated tenant-scoped widget update
+  - method: DELETE
+    path: /api/widgets/11111111-1111-4111-8111-111111111111
+    description: Authenticated tenant-scoped widget deletion
+  - method: GET
+    path: /api/dashboard/submissions?page=1&pageSize=25
+    description: Authenticated tenant-scoped dashboard submissions
+  - method: GET
+    path: /api/dashboard/stats/overview
+    description: Authenticated tenant-scoped dashboard overview analytics
+  - method: GET
+    path: /api/dashboard/stats/widgets
+    description: Authenticated tenant-scoped widget analytics
+  - method: GET
+    path: /api/dashboard/stats/geo
+    description: Authenticated tenant-scoped geo analytics

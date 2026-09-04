@@ -303,6 +303,23 @@ The complete suite passes with 26 tests and 0 failures.
 
 The complete suite passes with 33 tests and 0 failures.
 
+## Phase 4.11 - Documentation and acceptance evidence proof
+
+- `README.md` documents installation, migration, JWT configuration, protected-route usage, widget testing, dashboard queries, limitations, and acceptance commands.
+- `capstone.yaml` includes probes for health, widget delivery, public submissions, widget CRUD, dashboard submissions, and all dashboard analytics endpoints.
+- Authentication evidence covers missing, malformed, invalid, and incomplete bearer tokens returning `401 UNAUTHORIZED`.
+- Tenant-isolation evidence covers tenant-scoped widget and submission repository queries and authenticated dashboard context.
+- Idempotency evidence covers identical request replay and conflicting payload protection.
+- Dashboard visibility evidence covers authenticated paginated submission retrieval and overview/widget/geo analytics responses.
+- AI assistance was provided through Copilot SDK in VS Code; usage cost is not metered by this repository or local test tooling.
+
+### Acceptance command evidence
+
+```text
+Command: npm test
+Result: 33 tests passed, 0 failed
+```
+
 ## Phase 4.9 - Dashboard submissions API proof
 
 - `GET /api/dashboard/submissions` requires owner authentication.

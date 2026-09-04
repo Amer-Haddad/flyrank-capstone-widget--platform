@@ -99,6 +99,30 @@ test("POST /api/public/submissions rejects invalid payloads with 400", async () 
   }
 });
 
+test("POST /api/public/submissions rejects oversized payloads with 413", async () => {
+  const { server, port } = await buildServer();
+
+  try {
+    const response = await fetch(`http://127.0.0.1:${port}/api/public/submissions`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        widgetId: "11111111-1111-4111-8111-111111111111",
+        payload: { notes: "x".repeat(65 * 1024) },
+      }),
+    });
+
+    const body = await response.json();
+    assert.equal(response.status, 413);
+    assert.equal(body.success, false);
+    assert.equal(body.error.code, "PAYLOAD_TOO_LARGE");
+  } finally {
+    server.close();
+  }
+});
+
 test("POST /api/public/submissions blocks spam honeypots", async () => {
   submissionsRepository.findWidgetById = async () => ({
     id: "11111111-1111-4111-8111-111111111111",

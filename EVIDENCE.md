@@ -389,6 +389,13 @@ The complete suite passes with 33 tests and 0 failures.
 - Widget creation, public-link generation, configuration loading, and visitor
   submissions are tested through `admin.html` and `public.html`.
 
+## Email notification proof
+
+- `NOTIFICATION_EMAIL` is the primary recipient for new visitor submissions.
+- The email includes `name`/`fullName` and `email` field values when provided.
+- SMTP delivery uses `MAIL_FROM` as the company sender and the visitor email as
+  `Reply-To` when it is valid.
+
 ## Phase 4.4 - Widget management update/delete proof
 
 - `PATCH /api/widgets/:id` updates only the authenticated tenant's widget.

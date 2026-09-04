@@ -238,6 +238,15 @@ POST /api/public/submissions 200
 - Updated the static server, README, acceptance manifest, and evidence to use
   the admin/public interfaces.
 
+## 2026-09-04 - Company submission email notification
+
+- Visitor submission notifications now use `NOTIFICATION_EMAIL` as the primary
+  company recipient.
+- Notification emails include the visitor name and email when those standard
+  field keys are present.
+- Valid visitor email addresses are set as `Reply-To`, while `MAIL_FROM`
+  remains the configured company sender.
+
 ## 2026-09-04 - Admin connection error message
 
 - Confirmed the reported `NetworkError` was caused by the API not running on port 3000.

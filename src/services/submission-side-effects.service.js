@@ -7,7 +7,7 @@ const SUBMISSION_SIDE_EFFECTS_JOB = "submission-side-effects";
 const DEFAULT_EMAIL_RECIPIENT = "your-recipient@example.com";
 
 function getRecipientEmail() {
-  return process.env.TEST_EMAIL || process.env.NOTIFICATION_EMAIL || DEFAULT_EMAIL_RECIPIENT;
+  return process.env.NOTIFICATION_EMAIL || process.env.TEST_EMAIL || DEFAULT_EMAIL_RECIPIENT;
 }
 
 function getSenderEmail() {
@@ -44,13 +44,26 @@ function normalizeMetadata(payload) {
   };
 }
 
+function getVisitorValue(payload, keys) {
+  for (const key of keys) {
+    if (typeof payload[key] === "string" && payload[key].trim()) {
+      return payload[key].trim();
+    }
+  }
+  return null;
+}
+
 async function sendSubmissionEmail({ submissionId, widgetId, tenantId, payload, ip, userAgent }) {
   const recipientEmail = getRecipientEmail();
+  const visitorName = getVisitorValue(payload, ["name", "fullName", "full_name"]);
+  const visitorEmail = getVisitorValue(payload, ["email", "emailAddress", "email_address"]);
   const emailBody = [
     "FlyRank submission received.",
     `Submission ID: ${submissionId}`,
     `Widget ID: ${widgetId}`,
     `Tenant ID: ${tenantId}`,
+    `Visitor name: ${visitorName || "not provided"}`,
+    `Visitor email: ${visitorEmail || "not provided"}`,
     `IP: ${ip || "unknown"}`,
     `User-Agent: ${userAgent || "unknown"}`,
     "",
@@ -64,6 +77,10 @@ async function sendSubmissionEmail({ submissionId, widgetId, tenantId, payload, 
     subject: `New widget submission: ${widgetId}`,
     text: emailBody,
   };
+
+  if (visitorEmail && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(visitorEmail)) {
+    emailPayload.replyTo = visitorEmail;
+  }
 
   if (process.env.MAILER_MODE === "mock") {
     console.log(`[email] mock send to ${recipientEmail}: ${emailPayload.subject}`);

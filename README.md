@@ -271,6 +271,8 @@ token.
 - Submission persistence is the source of truth.
 - Geo and email failures do not invalidate a successful submission.
 - Email side effects run asynchronously and retry before recording failure.
+- Configure `NOTIFICATION_EMAIL` as the company mailbox, and configure
+  `SMTP_USER`, `SMTP_PASS`, and `MAIL_FROM` for the company sender account.
 - Reusing an `Idempotency-Key` with the same request replays the stored result.
 - Reusing an idempotency key with different request data returns a conflict.
 - Missing or invalid owner credentials return `401 UNAUTHORIZED`.

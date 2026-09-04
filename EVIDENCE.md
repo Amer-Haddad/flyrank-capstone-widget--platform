@@ -381,6 +381,14 @@ Result: 33 tests passed, 0 failed
 
 The complete suite passes with 33 tests and 0 failures.
 
+## Interface cleanup proof
+
+- Removed the obsolete `widget-test.html` page.
+- The admin interface is now served with `npm run serve:admin` on port 5500.
+- The public interface remains served with `npm run serve:public` on port 5501.
+- Widget creation, public-link generation, configuration loading, and visitor
+  submissions are tested through `admin.html` and `public.html`.
+
 ## Phase 4.4 - Widget management update/delete proof
 
 - `PATCH /api/widgets/:id` updates only the authenticated tenant's widget.

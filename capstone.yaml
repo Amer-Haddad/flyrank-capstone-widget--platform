@@ -5,8 +5,8 @@ base_url: http://localhost:3000
 probes:
   - command: npm test
     description: Run the complete automated acceptance suite
-  - command: npm run serve:widget-test
-    description: Serve the second-origin widget test page on port 5500
+  - command: npm run serve:admin
+    description: Serve the admin interface on port 5500
 endpoints:
   - method: GET
     path: /api/health

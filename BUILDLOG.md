@@ -230,6 +230,14 @@ POST /api/public/submissions 200
 
 - Added `npm run serve:public` to start the public form origin directly on port 5501.
 
+## 2026-09-04 - Remove obsolete widget test page
+
+- Removed `widget-test.html` because widget creation and visitor submission can
+  be tested through the admin and public interfaces.
+- Renamed the port-5500 command to `npm run serve:admin`.
+- Updated the static server, README, acceptance manifest, and evidence to use
+  the admin/public interfaces.
+
 ## 2026-09-04 - Admin connection error message
 
 - Confirmed the reported `NetworkError` was caused by the API not running on port 3000.

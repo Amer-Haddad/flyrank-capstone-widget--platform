@@ -9,9 +9,9 @@ const rootDirectory = path.resolve(__dirname, "..");
 
 const server = http.createServer((req, res) => {
   const requestedPath = new URL(req.url, `http://${req.headers.host}`).pathname;
-  const relativePath = requestedPath === "/" ? "widget-test.html" : requestedPath.slice(1);
+  const relativePath = requestedPath === "/" ? "admin.html" : requestedPath.slice(1);
   const filePath = path.resolve(rootDirectory, relativePath);
-  if (!filePath.startsWith(rootDirectory) || !["widget-test.html", "admin.html", "public.html"].includes(relativePath)) {
+  if (!filePath.startsWith(rootDirectory) || !["admin.html", "public.html"].includes(relativePath)) {
     res.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" });
     res.end("Not found");
     return;
@@ -20,7 +20,7 @@ const server = http.createServer((req, res) => {
   fs.readFile(filePath, (error, content) => {
     if (error) {
       res.writeHead(500, { "Content-Type": "text/plain; charset=utf-8" });
-      res.end("Unable to load widget test page");
+      res.end("Unable to load interface page");
       return;
     }
 
@@ -30,7 +30,7 @@ const server = http.createServer((req, res) => {
 });
 
 server.listen(port, () => {
-  console.log(`Widget test page is running at http://localhost:${port}/widget-test.html`);
+  console.log(`Admin interface is running at http://localhost:${port}/admin.html`);
 });
 
 function shutdown() {

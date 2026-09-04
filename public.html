@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FlyRank Public Form</title>
+  <style>
+    :root { font-family: Inter, Arial, sans-serif; color: #172033; background: #eef3f9; }
+    body { margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 24px; }
+    .card { width: min(520px, 100%); background: white; padding: 28px; border-radius: 16px; box-shadow: 0 12px 32px #1720331a; }
+    h1 { margin-top: 0; }
+    p { color: #66748a; }
+    form { display: grid; gap: 14px; }
+    label { display: grid; gap: 6px; font-weight: 700; }
+    input, button { font: inherit; padding: 11px; border-radius: 8px; }
+    input { border: 1px solid #cbd5e1; }
+    button { border: 0; background: #2864d7; color: white; font-weight: 700; cursor: pointer; transition: background .15s ease, transform .05s ease; }
+    button:hover { background: #1f51b3; }
+    button:active { background: #173d88; transform: translateY(1px); }
+    button:focus-visible { outline: 3px solid #9ec1ff; outline-offset: 2px; }
+    button:disabled { background: #b8c4d6; color: #eef2f7; cursor: not-allowed; transform: none; }
+    .status { min-height: 22px; }
+    .error { color: #b42318; }
+    .success { color: #137333; }
+    .setup { display: grid; gap: 10px; margin-bottom: 20px; }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <div id="setup" class="setup">
+      <label>API URL <input id="api-url" value="http://localhost:3000"></label>
+      <label>Widget ID <input id="widget-id" placeholder="Paste a widget ID"></label>
+      <button id="load-widget" type="button">Load widget</button>
+    </div>
+    <div id="widget-area"><p>Choose a widget to continue.</p></div>
+  </main>
+  <script>
+    const params = new URLSearchParams(location.search);
+    const apiInput = document.getElementById('api-url');
+    const widgetInput = document.getElementById('widget-id');
+    const area = document.getElementById('widget-area');
+    apiInput.value = params.get('api') || apiInput.value;
+    widgetInput.value = params.get('widget') || '';
+    function apiUrl(path) { return apiInput.value.replace(/\/$/, '') + path; }
+    function escapeHtml(value) { return String(value).replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[char])); }
+    async function loadWidget() {
+      const widgetId = widgetInput.value.trim();
+      if (!widgetId) { area.innerHTML = '<p class="error">Enter a widget ID.</p>'; return; }
+      try {
+        const response = await fetch(apiUrl(`/api/public/widgets/${encodeURIComponent(widgetId)}/config`), { headers: { Accept: 'application/json' } });
+        const body = await response.json();
+        if (!response.ok) throw new Error(body.error?.message || 'Widget could not be loaded.');
+        const widget = body.data;
+        area.innerHTML = `<h1>${escapeHtml(widget.title)}</h1><p>${escapeHtml(widget.description || '')}</p><form id="public-form">${(widget.fields || []).map((field) => `<label>${escapeHtml(field.label)}<input name="${escapeHtml(field.key)}" type="${field.type === 'email' ? 'email' : 'text'}" ${field.required ? 'required' : ''}></label>`).join('')}<button type="submit">${escapeHtml(widget.buttonText || 'Submit')}</button><p id="status" class="status"></p></form>`;
+        document.getElementById('public-form').addEventListener('submit', (event) => submitWidget(event, widget.widgetId));
+      } catch (error) { area.innerHTML = `<p class="error">${escapeHtml(error.message)}</p>`; }
+    }
+    async function submitWidget(event, widgetId) {
+      event.preventDefault();
+      const form = event.currentTarget;
+      const status = document.getElementById('status');
+      const payload = Object.fromEntries(new FormData(form));
+      try {
+        const response = await fetch(apiUrl('/api/public/submissions'), { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'Idempotency-Key': crypto.randomUUID() }, body: JSON.stringify({ widgetId, payload }) });
+        const body = await response.json();
+        if (!response.ok) throw new Error(body.error?.message || 'Submission failed.');
+        status.textContent = 'Thank you. Your information was submitted successfully.';
+        status.className = 'status success';
+        form.querySelector('button').disabled = true;
+      } catch (error) { status.textContent = error.message; status.className = 'status error'; }
+    }
+    document.getElementById('load-widget').addEventListener('click', loadWidget);
+    if (widgetInput.value) loadWidget();
+  </script>
+</body>
+</html>

@@ -11,6 +11,9 @@ endpoints:
   - method: GET
     path: /api/health
     description: Service health baseline endpoint
+  - method: POST
+    path: /api/auth/register
+    description: Create a tenant and its first owner account
   - method: GET
     path: /widget.js?id=11111111-1111-4111-8111-111111111111&v=7
     description: Versioned public widget bundle with immutable caching

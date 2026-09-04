@@ -2,17 +2,20 @@ const http = require("node:http");
 const fs = require("node:fs");
 const path = require("node:path");
 
-const port = Number(process.env.WIDGET_TEST_PORT || 5501);
-const testPage = path.resolve(__dirname, "..", "widget-test.html");
+const port = Number(process.env.WIDGET_TEST_PORT || 5500);
+const rootDirectory = path.resolve(__dirname, "..");
 
 const server = http.createServer((req, res) => {
-  if (req.url !== "/" && req.url !== "/widget-test.html") {
+  const requestedPath = new URL(req.url, `http://${req.headers.host}`).pathname;
+  const relativePath = requestedPath === "/" ? "widget-test.html" : requestedPath.slice(1);
+  const filePath = path.resolve(rootDirectory, relativePath);
+  if (!filePath.startsWith(rootDirectory) || !["widget-test.html", "admin.html", "public.html"].includes(relativePath)) {
     res.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" });
     res.end("Not found");
     return;
   }
 
-  fs.readFile(testPage, (error, content) => {
+  fs.readFile(filePath, (error, content) => {
     if (error) {
       res.writeHead(500, { "Content-Type": "text/plain; charset=utf-8" });
       res.end("Unable to load widget test page");

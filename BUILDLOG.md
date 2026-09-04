@@ -202,6 +202,57 @@ POST /api/public/submissions 200
 - Capped widget and geo result sets at 100 rows and added validation for analytics filters.
 - Added tests for analytics responses, tenant context, authentication, and invalid filters.
 
+## 2026-09-04 - User registration
+
+- Added `POST /api/auth/register` for tenant and first-owner creation.
+- Added email, tenant slug, and password validation.
+- Added bcrypt password hashing and a one-hour HS256 JWT response.
+- Tenant and user inserts run in one transaction; duplicates return `409 REGISTRATION_CONFLICT`.
+- Added registration tests for successful JWT issuance, invalid input, and duplicate conflicts.
+
+## 2026-09-04 - Plain HTML interfaces
+
+- Added `admin.html` for owner registration, widget creation, widget listing, and dashboard data.
+- Added `public.html` for visitors to load a widget and submit form data without authentication.
+- Extended the dependency-free static server to serve both pages on port 5500.
+
+## 2026-09-04 - Registration browser CORS fix
+
+- Added CORS and preflight handling to `POST /api/auth/register`.
+- Verified registration from the admin page origin (`http://localhost:5500`).
+
+## 2026-09-04 - Protected admin browser CORS fix
+
+- Added shared API CORS handling before authentication middleware.
+- Protected widget and dashboard preflight requests now return `204` instead of `401`.
+
+## 2026-09-04 - Admin connection error message
+
+- Confirmed the reported `NetworkError` was caused by the API not running on port 3000.
+- Updated the admin page to show the required `npm start` action when the API is unreachable.
+
+## 2026-09-04 - Button interaction states
+
+- Added simple hover, pressed, focus, and disabled button colors to the admin and public interfaces.
+
+### Runtime evidence
+
+```text
+OPTIONS /api/auth/register 204
+✔ registration responds to browser preflight requests
+ℹ tests 37
+ℹ pass 37
+ℹ fail 0
+```
+
+### Runtime evidence
+
+```text
+ℹ tests 36
+ℹ pass 36
+ℹ fail 0
+```
+
 ## 2026-09-04 - Phase 4.11 documentation and acceptance evidence
 
 - Updated `README.md` with JWT setup, protected-route examples, dashboard examples, and migration/seed limitations.

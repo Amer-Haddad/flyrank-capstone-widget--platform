@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FlyRank Admin</title>
+  <style>
+    :root { font-family: Inter, Arial, sans-serif; color: #172033; background: #f4f7fb; }
+    * { box-sizing: border-box; }
+    body { margin: 0; }
+    header { background: #172033; color: white; padding: 22px 6vw; }
+    header h1 { margin: 0 0 4px; font-size: 24px; }
+    header p { margin: 0; color: #b9c5d8; }
+    main { width: min(1100px, 92vw); margin: 28px auto 60px; display: grid; gap: 20px; }
+    .card { background: white; border: 1px solid #dce3ed; border-radius: 14px; padding: 22px; box-shadow: 0 8px 24px #1720330d; }
+    h2 { margin: 0 0 16px; font-size: 19px; }
+    form { display: grid; gap: 12px; }
+    .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    label { display: grid; gap: 6px; font-weight: 700; font-size: 13px; }
+    input, select, textarea, button { font: inherit; }
+    input, select, textarea { width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px; }
+    textarea { min-height: 78px; resize: vertical; }
+    button { border: 0; border-radius: 8px; padding: 11px 16px; background: #2864d7; color: white; cursor: pointer; font-weight: 700; transition: background .15s ease, transform .05s ease; }
+    button:hover { background: #1f51b3; }
+    button:active { background: #173d88; transform: translateY(1px); }
+    button:focus-visible { outline: 3px solid #9ec1ff; outline-offset: 2px; }
+    button:disabled { background: #b8c4d6; color: #eef2f7; cursor: not-allowed; transform: none; }
+    button.secondary { background: #e8eef8; color: #1d3b70; }
+    button.secondary:hover { background: #d7e2f3; }
+    button.secondary:active { background: #c5d4ea; }
+    .actions { display: flex; gap: 10px; flex-wrap: wrap; }
+    .muted { color: #66748a; font-size: 14px; }
+    .status { min-height: 22px; margin: 10px 0 0; color: #2864d7; }
+    .error { color: #b42318; }
+    .success { color: #137333; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid #e8edf4; font-size: 14px; }
+    code { word-break: break-all; }
+    @media (max-width: 700px) { .grid { grid-template-columns: 1fr; } main { width: 94vw; } }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>FlyRank Admin Workspace</h1>
+    <p>Create widgets, copy an embed URL, and review tenant submissions.</p>
+  </header>
+  <main>
+    <section class="card">
+      <h2>Owner registration</h2>
+      <p class="muted">Create a tenant and its first owner account. The returned token is stored only in this browser.</p>
+      <form id="registration-form">
+        <div class="grid">
+          <label>Company name <input name="tenantName" required minlength="2" value="Example Company"></label>
+          <label>Tenant slug <input name="tenantSlug" required pattern="[a-z0-9]+(?:-[a-z0-9]+)*" value="example-company"></label>
+          <label>Email <input name="email" type="email" required value="owner@example.com"></label>
+          <label>Password <input name="password" type="password" minlength="12" required value="correct-horse-battery"></label>
+        </div>
+        <button type="submit">Register owner</button>
+      </form>
+      <p id="registration-status" class="status"></p>
+    </section>
+
+    <section class="card">
+      <h2>Session</h2>
+      <p class="muted">Use registration above or paste a JWT issued by the API.</p>
+      <div class="grid">
+        <label>API URL <input id="api-url" value="http://localhost:3000"></label>
+        <label>Bearer token <input id="token" type="password" placeholder="Paste JWT here"></label>
+      </div>
+      <div class="actions">
+        <button id="save-session" type="button">Save session</button>
+        <button id="clear-session" class="secondary" type="button">Clear session</button>
+      </div>
+      <p id="session-status" class="status"></p>
+    </section>
+
+    <section class="card">
+      <h2>Create widget</h2>
+      <form id="widget-form">
+        <div class="grid">
+          <label>Widget type
+            <select name="type"><option value="contact">Contact</option><option value="signup">Signup</option><option value="cta">CTA</option></select>
+          </label>
+          <label>Button text <input name="buttonText" value="Submit"></label>
+        </div>
+        <label>Title <input name="title" required value="Contact our team"></label>
+        <label>Description <textarea name="description">Leave your details and we will contact you.</textarea></label>
+        <label>Fields <input name="fields" required value="name:text:Name,email:email:Email"></label>
+        <p class="muted">Format: <code>key:type:label</code>, separated by commas. Example: <code>name:text:Name,email:email:Email</code></p>
+        <button type="submit">Create widget</button>
+      </form>
+      <p id="widget-status" class="status"></p>
+    </section>
+
+    <section class="card">
+      <h2>Widgets</h2>
+      <div class="actions"><button id="refresh-widgets" type="button">Refresh widgets</button></div>
+      <div id="widgets-output" class="muted">Save a session, then load widgets.</div>
+    </section>
+
+    <section class="card">
+      <h2>Dashboard</h2>
+      <div class="actions">
+        <button id="refresh-dashboard" type="button">Refresh dashboard</button>
+        <button id="open-public" class="secondary" type="button">Open public form</button>
+      </div>
+      <div id="dashboard-output" class="muted">Dashboard data will appear here.</div>
+    </section>
+  </main>
+  <script>
+    const apiInput = document.getElementById('api-url');
+    const tokenInput = document.getElementById('token');
+    const registrationStatus = document.getElementById('registration-status');
+    const sessionStatus = document.getElementById('session-status');
+    const widgetStatus = document.getElementById('widget-status');
+    const widgetsOutput = document.getElementById('widgets-output');
+    const dashboardOutput = document.getElementById('dashboard-output');
+    const state = { widgets: [] };
+
+    apiInput.value = localStorage.getItem('flyrankApiUrl') || apiInput.value;
+    tokenInput.value = localStorage.getItem('flyrankToken') || '';
+
+    function apiUrl(path) { return apiInput.value.replace(/\/$/, '') + path; }
+    function setStatus(element, message, type) { element.textContent = message; element.className = `status ${type || ''}`; }
+    function authHeaders() {
+      const token = tokenInput.value.trim();
+      if (!token) throw new Error('Save a Bearer token first.');
+      return { Authorization: `Bearer ${token}`, Accept: 'application/json' };
+    }
+    async function request(path, options = {}) {
+      let response;
+      try {
+        response = await fetch(apiUrl(path), options);
+      } catch (_error) {
+        throw new Error(`Cannot connect to ${apiInput.value}. Start the API with "npm start" and try again.`);
+      }
+      const body = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(body.error?.message || `Request failed (${response.status})`);
+      return body.data;
+    }
+    function showWidgets(widgets) {
+      state.widgets = widgets;
+      if (!widgets.length) { widgetsOutput.textContent = 'No widgets found.'; return; }
+      widgetsOutput.innerHTML = `<table><thead><tr><th>Title</th><th>Type</th><th>Version</th><th>Public form</th></tr></thead><tbody>${widgets.map((widget) => `
+        <tr><td>${escapeHtml(widget.title)}</td><td>${escapeHtml(widget.type)}</td><td>${widget.version}</td>
+        <td><a href="public.html?api=${encodeURIComponent(apiInput.value)}&widget=${encodeURIComponent(widget.id)}" target="_blank">Open form</a><br><code>${escapeHtml(widget.embedSnippet)}</code></td></tr>`).join('')}</tbody></table>`;
+    }
+    function escapeHtml(value) { return String(value).replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[char])); }
+    async function loadWidgets() {
+      try { showWidgets(await request('/api/widgets', { headers: authHeaders() })); }
+      catch (error) { setStatus(widgetStatus, error.message, 'error'); }
+    }
+    async function loadDashboard() {
+      try {
+        const headers = authHeaders();
+        const [submissions, overview, widgetStats, geo] = await Promise.all([
+          request('/api/dashboard/submissions?page=1&pageSize=10', { headers }),
+          request('/api/dashboard/stats/overview', { headers }),
+          request('/api/dashboard/stats/widgets', { headers }),
+          request('/api/dashboard/stats/geo', { headers })
+        ]);
+        dashboardOutput.innerHTML = `<p><strong>Total submissions:</strong> ${overview.total} | <strong>Showing:</strong> ${submissions.items.length}</p>
+          <h3>Recent submissions</h3>${submissions.items.length ? `<table><thead><tr><th>Date</th><th>Widget</th><th>Status</th></tr></thead><tbody>${submissions.items.map((item) => `<tr><td>${escapeHtml(item.created_at)}</td><td>${escapeHtml(item.widget_id)}</td><td>${escapeHtml(item.status)}</td></tr>`).join('')}</tbody></table>` : '<p>No submissions yet.</p>'}
+          <h3>By widget</h3><pre>${escapeHtml(JSON.stringify(widgetStats, null, 2))}</pre>
+          <h3>By location</h3><pre>${escapeHtml(JSON.stringify(geo, null, 2))}</pre>`;
+      } catch (error) { setStatus(sessionStatus, error.message, 'error'); }
+    }
+
+    document.getElementById('registration-form').addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const data = Object.fromEntries(new FormData(event.target));
+      try {
+        const result = await request('/api/auth/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+        tokenInput.value = result.token;
+        localStorage.setItem('flyrankToken', result.token);
+        setStatus(registrationStatus, `Registered ${result.user.email} for ${result.tenant.name}.`, 'success');
+        setStatus(sessionStatus, 'Session saved from registration.', 'success');
+      } catch (error) { setStatus(registrationStatus, error.message, 'error'); }
+    });
+    document.getElementById('save-session').addEventListener('click', () => {
+      localStorage.setItem('flyrankApiUrl', apiInput.value);
+      localStorage.setItem('flyrankToken', tokenInput.value);
+      setStatus(sessionStatus, 'Session saved.', 'success');
+    });
+    document.getElementById('clear-session').addEventListener('click', () => {
+      localStorage.removeItem('flyrankToken'); tokenInput.value = ''; setStatus(sessionStatus, 'Session cleared.', 'success');
+    });
+    document.getElementById('widget-form').addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const values = Object.fromEntries(new FormData(event.target));
+      const fields = values.fields.split(',').map((item) => {
+        const [key, type, label] = item.trim().split(':');
+        return { key, type, label, required: true };
+      });
+      try {
+        const result = await request('/api/widgets', { method: 'POST', headers: { ...authHeaders(), 'Content-Type': 'application/json' }, body: JSON.stringify({ type: values.type, title: values.title, description: values.description, buttonText: values.buttonText, fields }) });
+        setStatus(widgetStatus, `Widget created: ${result.id}`, 'success'); await loadWidgets();
+      } catch (error) { setStatus(widgetStatus, error.message, 'error'); }
+    });
+    document.getElementById('refresh-widgets').addEventListener('click', loadWidgets);
+    document.getElementById('refresh-dashboard').addEventListener('click', loadDashboard);
+    document.getElementById('open-public').addEventListener('click', () => {
+      const widget = state.widgets[0];
+      if (widget) window.open(`public.html?api=${encodeURIComponent(apiInput.value)}&widget=${encodeURIComponent(widget.id)}`, '_blank');
+      else setStatus(widgetStatus, 'Load or create a widget first.', 'error');
+    });
+  </script>
+</body>
+</html>

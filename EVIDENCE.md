@@ -301,7 +301,27 @@ The complete suite passes with 26 tests and 0 failures.
 ✔ POST /api/public/submissions does not fail when async email side effect fails
 ```
 
-The complete suite passes with 33 tests and 0 failures.
+The complete suite passes with 36 tests and 0 failures.
+
+## User registration proof
+
+- `POST /api/auth/register` validates tenant name, tenant slug, email, and password.
+- The tenant and first owner are created transactionally.
+- Passwords are hashed with bcrypt and never returned in API responses.
+- A one-hour HS256 JWT includes the new user ID, tenant ID, and owner role.
+- Duplicate tenant slugs or accounts return `409 REGISTRATION_CONFLICT`.
+
+## HTML interface proof
+
+- `admin.html` provides registration, JWT session storage, widget creation, widget links, and dashboard views.
+- `public.html` loads public widget configuration and submits visitor data without an owner token.
+- `npm run serve:widget-test` serves the pages from a second origin on port 5500.
+- Registration CORS allows the admin origin to complete JSON POST preflight and registration.
+- Admin network failures now explain that the API must be running on port 3000.
+- Protected widget and dashboard browser preflight requests allow the Authorization header before authentication.
+- Interface buttons now have clear hover, pressed, focus, and disabled states.
+
+The complete suite passes with 37 tests and 0 failures.
 
 ## Phase 4.11 - Documentation and acceptance evidence proof
 

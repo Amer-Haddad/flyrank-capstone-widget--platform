@@ -70,11 +70,22 @@ npm run migrate
 ```
 
 The migration command applies [schema.sql](C:/Users/USER/Desktop/flyrank-capstone-widget--platform/src/database/schema.sql).
-There is no user-registration or seed command in this repository. Applications
-integrating the platform must provision tenants and users through their own
-administration workflow.
+There is no seed command in this repository. The registration endpoint creates
+the first tenant and owner account; applications may add a separate
+administration workflow for additional users.
 
 ## Running the application
+
+### Quick start for a new user
+
+After installing the prerequisites, open PowerShell in the project folder, run
+`npm install`, copy `.env.example` to `.env`, start PostgreSQL with
+`docker compose up -d postgres`, and apply the database with `npm run migrate`.
+Start the API with `npm start` in one terminal, then run `npm run
+serve:widget-test` in a second terminal. Open
+`http://localhost:5500/admin.html` to register an owner, create a widget, and
+view the dashboard. Share the public form using
+`http://localhost:5500/public.html?widget=<widget-id>`.
 
 Development mode:
 
@@ -89,6 +100,10 @@ npm start
 ```
 
 The API listens on port `3000` by default. Set `PORT` to use another port.
+
+Keep the API running while using the browser interfaces. If the admin page
+shows a connection error, start `npm start` in a separate terminal and verify
+that `http://localhost:3000/api/health` opens.
 
 ## Authentication
 
@@ -107,7 +122,21 @@ The token must contain:
 `JWT_ISSUER` is optional. When configured, tokens must contain the matching
 issuer claim.
 
-Example token generation for local development:
+Registration is available at `POST /api/auth/register`. It creates a tenant
+and its first owner account, hashes the password with bcrypt, and returns a
+one-hour JWT:
+
+```powershell
+Invoke-RestMethod -Method Post -Uri http://localhost:3000/api/auth/register `
+  -ContentType "application/json" `
+  -Body '{"tenantName":"Example Company","tenantSlug":"example-company","email":"owner@example.com","password":"correct-horse-battery"}'
+```
+
+Use the returned `data.token` as the Bearer token for protected endpoints.
+Tenant slugs are lowercase URL-safe values, and passwords must contain 12 to
+128 characters.
+
+Example manual token generation for local development:
 
 ```bash
 node -e "require('dotenv').config(); console.log(require('jsonwebtoken').sign({sub:'demo-user',tenantId:'demo-tenant',role:'owner'}, process.env.JWT_SECRET, {algorithm:'HS256', issuer:process.env.JWT_ISSUER}))"
@@ -144,6 +173,7 @@ Errors use:
 | Method | Endpoint | Description |
 | --- | --- | --- |
 | `GET` | `/api/health` | Service health check |
+| `POST` | `/api/auth/register` | Create a tenant and its first owner account |
 | `GET` | `/widget.js?id=<widgetId>&v=<version>` | Versioned widget bundle |
 | `GET` | `/api/public/widgets/:id/config` | Public widget configuration |
 | `OPTIONS` | `/api/public/submissions` | Submission CORS preflight |
@@ -152,6 +182,25 @@ Errors use:
 ### Protected widget management
 
 All endpoints in this section require authentication and tenant context.
+
+### Registration
+
+Registering creates a new tenant and its first owner atomically. Passwords are
+hashed with bcrypt and the response includes a one-hour JWT for immediate API
+access.
+
+```bash
+curl -X POST http://localhost:3000/api/auth/register `
+  -H "Content-Type: application/json" `
+  -d '{"tenantName":"Example Company","tenantSlug":"example-company","email":"owner@example.com","password":"correct-horse-battery"}'
+```
+
+Use the returned `data.token` as the Bearer token for protected endpoints.
+Tenant slugs must be lowercase URL-safe values, emails must be valid, and
+passwords must contain 12 to 128 characters.
+
+The registration endpoint supports browser CORS so the plain HTML admin page
+served from port `5500` can register against the API on port `3000`.
 
 | Method | Endpoint | Description |
 | --- | --- | --- |
@@ -201,9 +250,17 @@ Start the API, then serve the second-origin test page:
 npm run serve:widget-test
 ```
 
-Open `http://localhost:5500/widget-test.html`. The page loads the widget from
-port `3000`, fetches public configuration, renders the form, and exercises
-cross-origin submission behavior.
+Open `http://localhost:5500/widget-test.html` for the basic widget delivery
+test. The same static server also provides:
+
+- `http://localhost:5500/admin.html` - owner registration, widget creation,
+  widget listing, and dashboard interface.
+- `http://localhost:5500/public.html?widget=<widgetId>` - public visitor form
+  for submitting data to a widget.
+
+The admin page calls the authenticated widget and dashboard APIs. The public
+page calls only the public configuration and submission APIs, so a random
+visitor does not need an owner token.
 
 ## Reliability and security behavior
 
@@ -225,7 +282,7 @@ Run the complete automated suite:
 npm test
 ```
 
-The current acceptance suite covers authentication, tenant isolation, widget
+The current acceptance suite covers registration, authentication, tenant isolation, widget
 CRUD, widget delivery, CORS, validation, abuse protection, geo fallback,
 asynchronous side effects, idempotency, dashboard submissions, and analytics.
 

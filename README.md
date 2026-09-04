@@ -1,213 +1,246 @@
-# FlyRank Capstone - Embeddable Widget Platform
+# FlyRank Widget Platform
 
-## Phase 1.1 status
+An embeddable widget and lead-capture platform built with Node.js, Express,
+and PostgreSQL. Widget owners can manage tenant-isolated widgets, embed them
+on external websites, collect submissions, and review dashboard analytics.
 
-Repository baseline and layered Node.js architecture are scaffolded.
+## Features
 
-## Phase 1.2 status
+- Embeddable, versioned widget bundle
+- Public widget configuration endpoint with cache headers and CORS
+- Cross-origin submission API with validation and payload limits
+- Per-IP and per-widget rate limiting
+- Honeypot spam protection
+- Geo-enrichment provider fallback
+- Asynchronous email side effects with retries
+- Idempotent public submissions
+- JWT-protected owner APIs
+- Tenant-scoped widget management and dashboard queries
+- Submission, widget, and geo analytics
 
-Data model and SQL migrations are added for:
-- tenants
-- users
-- widgets
-- widget_fields
-- submissions
-- submission_events
-- idempotency_keys
-- schema_migrations (migration tracking)
+## Technology
 
-## Stack
-
-- Node.js (CommonJS)
-- Express
-- PostgreSQL (via Docker Compose)
-
-## Current architecture skeleton
-
-```text
-src/
-  app.js
-  server.js
-  config/
-  controllers/
-  middleware/
-  models/
-  repositories/
-  routes/
-  services/
-  jobs/
-```
+- Node.js (LTS recommended)
+- Express 5
+- PostgreSQL
+- JWT (`HS256`) authentication
+- Nodemailer for email notifications
 
 ## Architecture
 
 ```text
-Browser / embedded widget
-        |
-        v
-Express routes + middleware (CORS, validation, rate limits, errors)
-        |
-        v
+Embedded browser widget
+          |
+          v
+Express routes and middleware
+(authentication, CORS, validation, rate limits, errors)
+          |
+          v
 Controllers -> Services -> Repositories -> PostgreSQL
                          |
-                         +-> geo provider fallback
-                         +-> asynchronous email side effect
+                         +-> Geo provider fallback
+                         +-> Asynchronous side-effect jobs
 ```
 
-## Run
+The application is organized into `routes`, `middleware`, `controllers`,
+`services`, `repositories`, `jobs`, `config`, and `database` layers.
+
+## Prerequisites
+
+- Node.js and npm
+- Docker Desktop (for the local PostgreSQL container)
+
+## Installation
 
 ```bash
 npm install
-npm run dev
 ```
 
-## Database migration
+Copy `.env.example` to `.env` and set environment-specific values. At minimum,
+configure a random `JWT_SECRET` containing at least 32 characters and a valid
+`DATABASE_URL`.
+
+## Database setup
+
+Start PostgreSQL and apply the schema:
 
 ```bash
 docker compose up -d postgres
 npm run migrate
 ```
 
-The migration command applies `src/database/schema.sql`. There is no separate
-seed command in the current implementation; tests provide deterministic
-repository fixtures.
+The migration command applies [schema.sql](C:/Users/USER/Desktop/flyrank-capstone-widget--platform/src/database/schema.sql).
+There is no user-registration or seed command in this repository. Applications
+integrating the platform must provision tenants and users through their own
+administration workflow.
 
-## Owner authentication
+## Running the application
 
-Protected widget and dashboard routes require an `HS256` JWT containing `sub`
-(or `userId`) and `tenantId` claims. Configure `JWT_SECRET` with at least 32
-characters and optionally set `JWT_ISSUER`. For local testing, create a token
-with the installed `jsonwebtoken` package:
+Development mode:
 
 ```bash
-node -e "console.log(require('jsonwebtoken').sign({sub:'demo-user',tenantId:'demo-tenant',role:'owner'}, process.env.JWT_SECRET, {algorithm:'HS256', issuer:process.env.JWT_ISSUER}))"
+npm run dev
 ```
 
-Use the resulting value as `Authorization: Bearer <token>`. The application
-does not include a user-registration or seed endpoint; create database fixtures
-through the migration/schema process or an external application workflow.
-
-Health endpoint:
+Production-style start:
 
 ```bash
-GET /api/health
+npm start
 ```
 
-## Widget test page
+The API listens on port `3000` by default. Set `PORT` to use another port.
 
-Start the application on port 3000, then serve the plain HTML test page from a
-different origin and port:
+## Authentication
+
+Owner and dashboard endpoints require an `HS256` JWT in the following header:
+
+```http
+Authorization: Bearer <token>
+```
+
+The token must contain:
+
+- `sub` or `userId`: authenticated user identifier
+- `tenantId`: tenant identifier used for all protected reads and writes
+- `role`: optional role claim; defaults to `owner`
+
+`JWT_ISSUER` is optional. When configured, tokens must contain the matching
+issuer claim.
+
+Example token generation for local development:
 
 ```bash
-npm run serve:widget-test
+node -e "require('dotenv').config(); console.log(require('jsonwebtoken').sign({sub:'demo-user',tenantId:'demo-tenant',role:'owner'}, process.env.JWT_SECRET, {algorithm:'HS256', issuer:process.env.JWT_ISSUER}))"
 ```
 
-Open `http://localhost:5500/widget-test.html`. The page loads the versioned
-widget bundle from `http://localhost:3000`, fetches its public configuration,
-and renders the submission form.
+Do not use sample claims or development secrets in production.
 
-## Design and API contract
+## API reference
 
-Phase 1 design, API contracts, response format, status-code matrix, and explicit non-goal are documented in [DESIGN.md](C:/Users/USER/Desktop/flyrank-capstone-widget--platform/DESIGN.md).
+All JSON responses use the following envelope:
 
-## Implemented endpoints
+```json
+{
+  "success": true,
+  "data": {}
+}
+```
 
-| Method | Path | Purpose |
+Errors use:
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "ERROR_CODE",
+    "message": "Human-readable explanation.",
+    "details": []
+  }
+}
+```
+
+### System and public endpoints
+
+| Method | Endpoint | Description |
 | --- | --- | --- |
-| `GET` | `/api/health` | Runtime health check |
-| `POST` | `/api/widgets` | Authenticated widget creation; returns an embed snippet |
-| `GET` | `/api/widgets` | Authenticated tenant-scoped widget list |
-| `GET` | `/api/widgets/:id` | Authenticated tenant-scoped widget details and embed snippet |
-| `GET` | `/widget.js?id=<widgetId>&v=<version>` | Versioned embeddable widget bundle |
+| `GET` | `/api/health` | Service health check |
+| `GET` | `/widget.js?id=<widgetId>&v=<version>` | Versioned widget bundle |
 | `GET` | `/api/public/widgets/:id/config` | Public widget configuration |
-| `OPTIONS` | `/api/public/submissions` | CORS preflight |
-| `POST` | `/api/public/submissions` | Validated, rate-limited lead submission |
-| `GET` | `/api/dashboard/submissions` | Authenticated tenant-scoped submission list with filters and pagination |
-| `GET` | `/api/dashboard/stats/overview` | Tenant-scoped total and daily submission counts |
-| `GET` | `/api/dashboard/stats/widgets` | Tenant-scoped submission totals grouped by widget |
-| `GET` | `/api/dashboard/stats/geo` | Tenant-scoped submission totals grouped by country, region, and city |
+| `OPTIONS` | `/api/public/submissions` | Submission CORS preflight |
+| `POST` | `/api/public/submissions` | Validated public lead submission |
 
-Public submissions may include an `Idempotency-Key` header. Repeating the same
-key and request replays the stored response without creating another submission;
-reusing the key with different data returns a conflict.
+### Protected widget management
 
-## Limitations
+All endpoints in this section require authentication and tenant context.
 
-- Owner authentication, widget CRUD, dashboard submission listing, and
-  dashboard aggregation analytics are implemented.
-- The widget client is intentionally minimal and supports the configured
-  text/email fields without an advanced visual builder.
-- Geo enrichment and email notification are best-effort dependencies; the
-  submission record remains the source of truth when they fail.
+| Method | Endpoint | Description |
+| --- | --- | --- |
+| `POST` | `/api/widgets` | Create a widget and its fields |
+| `GET` | `/api/widgets` | List widgets for the authenticated tenant |
+| `GET` | `/api/widgets/:id` | Read a tenant-owned widget |
+| `PATCH` | `/api/widgets/:id` | Update a tenant-owned widget |
+| `DELETE` | `/api/widgets/:id` | Delete a tenant-owned widget |
 
-## Acceptance verification
-
-```bash
-npm test
-npm run serve:widget-test
-```
-
-With the application running on port 3000, open
-`http://localhost:5500/widget-test.html` to verify cross-origin widget
-delivery and form submission.
-
-Authenticated dashboard example:
-
-```bash
-curl -H "Authorization: Bearer <token>" \
-  "http://localhost:3000/api/dashboard/submissions?page=1&pageSize=25"
-curl -H "Authorization: Bearer <token>" \
-  "http://localhost:3000/api/dashboard/stats/overview"
-```
-
-Widget management responses include an `embedSnippet` value in this format:
+Create, read, and list responses include an `embedSnippet` value:
 
 ```html
 <script src="http://localhost:3000/widget.js?id=<widgetId>&v=<version>"></script>
 ```
 
-## Phase 1.4 Gate output - One-page design
+### Protected dashboard
 
-### Problem
-Widget owners need a secure, tenant-isolated backend to embed widgets on any website and collect leads from untrusted public traffic.
+All dashboard endpoints require authentication and only return records for the
+authenticated tenant.
 
-### Core architecture
-- Layered backend: middleware -> controllers -> services -> repositories -> PostgreSQL.
-- Three request paths:
-  - Owner path (authenticated widget management + dashboard)
-  - Public delivery path (widget script + widget config)
-  - Public ingestion path (cross-origin submissions)
+| Method | Endpoint | Description |
+| --- | --- | --- |
+| `GET` | `/api/dashboard/submissions` | Paginated submissions |
+| `GET` | `/api/dashboard/stats/overview` | Total and daily submission counts |
+| `GET` | `/api/dashboard/stats/widgets` | Submission totals grouped by widget |
+| `GET` | `/api/dashboard/stats/geo` | Submission totals grouped by country, region, and city |
 
-### Data model
-- `tenants`, `users`, `widgets`, `widget_fields`, `submissions`, `submission_events`, `idempotency_keys`.
-- Every tenant-owned table includes `tenant_id` for strict isolation.
-- Tenant and analytics indexes are included in [schema.sql](C:/Users/USER/Desktop/flyrank-capstone-widget--platform/src/database/schema.sql).
+Dashboard queries support optional `widgetId`, `from`, and `to` filters.
+Submission lists support `page` and `pageSize`; page size is limited to 100.
+Grouped widget and geo analytics are limited to 100 result rows.
 
-### API surface (contract)
-- Owner-authenticated:
-  - `POST /api/widgets`
-  - `GET /api/widgets`
-  - `GET /api/widgets/:id`
-  - `PATCH /api/widgets/:id`
-  - `DELETE /api/widgets/:id`
-  - `GET /api/dashboard/*`
-- Public:
-  - `GET /widget.js?id=<widgetId>&v=<bundleVersion>`
-  - `GET /api/public/widgets/:id/config`
-  - `OPTIONS /api/public/submissions`
-  - `POST /api/public/submissions`
+Example:
 
-### Security and resilience decisions
-- CORS + preflight handling for public submissions.
-- Boundary validation before business logic.
-- Rate limiting and spam control before persistence.
-- Geo enrichment with fallback chain.
-- Side effects are non-blocking (submission success does not depend on email/webhook success).
+```bash
+curl -H "Authorization: Bearer <token>" \
+  "http://localhost:3000/api/dashboard/submissions?page=1&pageSize=25"
 
-### Response contract
-- Success:
-  - `{ "success": true, "data": ... }`
-- Error:
-  - `{ "success": false, "error": { "code": "...", "message": "...", "details": [] } }`
+curl -H "Authorization: Bearer <token>" \
+  "http://localhost:3000/api/dashboard/stats/overview?from=2026-09-01"
+```
 
-### Explicit non-goal
-No advanced no-code visual builder (drag-and-drop editor, theme marketplace, campaign automation) in this capstone scope.
+## Embedding and browser verification
+
+Start the API, then serve the second-origin test page:
+
+```bash
+npm run serve:widget-test
+```
+
+Open `http://localhost:5500/widget-test.html`. The page loads the widget from
+port `3000`, fetches public configuration, renders the form, and exercises
+cross-origin submission behavior.
+
+## Reliability and security behavior
+
+- Submission persistence is the source of truth.
+- Geo and email failures do not invalidate a successful submission.
+- Email side effects run asynchronously and retry before recording failure.
+- Reusing an `Idempotency-Key` with the same request replays the stored result.
+- Reusing an idempotency key with different request data returns a conflict.
+- Missing or invalid owner credentials return `401 UNAUTHORIZED`.
+- Cross-tenant resource access is treated as not found.
+- Oversized payloads return `413 PAYLOAD_TOO_LARGE`.
+- Rate-limit violations return `429`.
+
+## Testing and acceptance
+
+Run the complete automated suite:
+
+```bash
+npm test
+```
+
+The current acceptance suite covers authentication, tenant isolation, widget
+CRUD, widget delivery, CORS, validation, abuse protection, geo fallback,
+asynchronous side effects, idempotency, dashboard submissions, and analytics.
+
+See [DESIGN.md](C:/Users/USER/Desktop/flyrank-capstone-widget--platform/DESIGN.md),
+[BUILDLOG.md](C:/Users/USER/Desktop/flyrank-capstone-widget--platform/BUILDLOG.md),
+and [EVIDENCE.md](C:/Users/USER/Desktop/flyrank-capstone-widget--platform/EVIDENCE.md)
+for the detailed contract, implementation history, and verification evidence.
+
+## Configuration reference
+
+Available configuration variables and safe placeholders are documented in
+[.env.example](C:/Users/USER/Desktop/flyrank-capstone-widget--platform/.env.example).
+Never commit `.env`, credentials, tokens, or provider secrets.
+
+## Scope
+
+This capstone intentionally excludes an advanced no-code visual builder,
+drag-and-drop editing, theme marketplaces, and campaign automation.

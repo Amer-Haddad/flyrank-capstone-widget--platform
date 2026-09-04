@@ -227,3 +227,23 @@ cross-origin widget script reference.
 ✔ widget repository scopes lookup by widget ID and tenant ID
 ✔ submission repository scopes list queries by tenant ID
 ```
+
+## Phase 4.3 - Widget management create/read proof
+
+- `POST /api/widgets` requires JWT authentication and tenant context.
+- Widget metadata and fields are validated before persistence.
+- Widget creation inserts the widget and its fields in one transaction.
+- `GET /api/widgets` returns only the authenticated tenant's widgets.
+- `GET /api/widgets/:id` reads through tenant-scoped repository access.
+- Create responses include a versioned embed snippet.
+
+### Automated proof
+
+```text
+✔ widget create returns 201 and an embed snippet
+✔ widget list and read routes use the authenticated tenant
+✔ widget management routes reject unauthenticated requests
+✔ widget creation rejects invalid field definitions
+```
+
+The complete suite now passes with 22 tests and 0 failures.

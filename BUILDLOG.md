@@ -140,3 +140,23 @@ GET /widget-test.html -> 200 text/html; charset=utf-8
 - Added tenant-scoped widget lookup using both `widget_id` and `tenant_id`.
 - Added tenant-scoped submission listing with optional widget filtering and pagination parameters.
 - Added tests proving missing tenant context is rejected and cross-tenant widget lookups return no record.
+
+## 2026-09-04 - Phase 4.3 widget management create/read
+
+- Added authenticated `POST /api/widgets`, `GET /api/widgets`, and `GET /api/widgets/:id` routes.
+- Added boundary validation for widget metadata and field definitions.
+- Added transactional widget and widget-field persistence scoped to the authenticated tenant.
+- Added embed snippet generation to widget responses.
+- Added tests for create/read/list success, invalid fields, and unauthenticated access.
+
+### Runtime evidence captured
+
+```text
+✔ widget create returns 201 and an embed snippet
+✔ widget list and read routes use the authenticated tenant
+✔ widget management routes reject unauthenticated requests
+✔ widget creation rejects invalid field definitions
+ℹ tests 22
+ℹ pass 22
+ℹ fail 0
+```
